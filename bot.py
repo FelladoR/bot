@@ -7,76 +7,26 @@ import os
 from pymongo import MongoClient
 from random import randint
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
-db = cluster['testbase']  # Выбор базы данных
-collection = db['testcollection']  # Выбор коллекции
+db = cluster['testbase'] 
+collection = db['testcollection']  
 collusers = cluster.testbase.collusers
 collservers = cluster.testbase.collservers
-
-intents = discord.Intents.default() # Подключаем "Разрешения"
+intents = discord.Intents.default()
 intents.message_content = True
-# Задаём префикс и интенты
+
 bot = commands.Bot(command_prefix='-', intents=intents) 
 
-# С помощью декоратора создаём первую команду
 
-@bot.command()
-async def warn(ctx, member: discord.Member = None, *, reason='причина не вказана'):
-    if not ctx.author.guild_permissions.administrator:
-        await ctx.send("У вас недостатньо прав для використання цієї команди.")
-        ctx.message.delete()
-        return
-    
-    if member is None:
-        await ctx.send(f'<@{ctx.author.id}>, вкажіть користувача якому потрібно видати попередження.')
-        ctx.message.delete()
-        return
-    
-    user_data = cluster.testbase.collusers.find_one({'_id': member.id, 'guild_id': ctx.guild.id})
-    
-    if user_data:
-        if user_data['warns'] >= 3:
-            # Reset warns and reasons
-            cluster.testbase.collusers.update_one(
-                {'_id': member.id, 'guild_id': ctx.guild.id},
-                {'$set': {'warns': 0, 'reasons': []}}
-            )
-        else:
-            server_data = cluster.testbase.collservers.find_one({'_id': ctx.guild.id})
-            if server_data:
-                # Increment warns and add reason
-                cluster.testbase.collservers.update_one(
-                    {'_id': ctx.guild.id},
-                    {'$inc': {'case': 1}}
-                )
-                cluster.testbase.collusers.update_one(
-                    {'_id': member.id, 'guild_id': ctx.guild.id},
-                    {
-                        '$inc': {'warns': 1},
-                        '$push': {
-                            'reasons': {
-                                'author_id': ctx.author.id,
-                                'case': server_data['case'],
-                                'reason': reason
-                            }
-                        }
-                    }
-                )
-                await ctx.send(f"{ctx.author} видав попередження {member}, причина: ``{reason}``. Case: {server_data['case']}")
-            else:
-                await ctx.send("Server data not found")
+async def load_cogs(bot):
+    for filename in os.listdir("cogs"):
+        if filename.endswith(".py"):
+           await bot.load_extension(f"cogs.{filename[:-3]}")
+        print(f"Загружен файл: {filename}")
     else:
-        # Додайте користувача, якщо його немає в базі даних
-        cluster.testbase.collusers.insert_one({
-            '_id': member.id,
-            'guild_id': ctx.guild.id,
-            'warns': 1,
-            'reasons': [{
-                'author_id': ctx.author.id,
-                'case': 1,
-                'reason': reason
-            }]
-        })
-        await ctx.send(f"{ctx.author} видав перше попередження {member}, причина: ``{reason}``. Case: 1")
+            print(f"Не удалось загрузить: {filename}")
+            
+
+
 
 
 
@@ -101,28 +51,7 @@ async def remwarn(ctx, case: int):
 
 
 
-@bot.command()
-async def warns(ctx, member: discord.Member = None):
-    if member is None:
-        member = ctx.author
 
-    usr = cluster.testbase.collusers.find_one({"_id": member.id, "guild_id": ctx.guild.id})
-    if usr and "reasons" in usr:
-        embed = discord.Embed(title="Попередження: " + str(usr['warns']), color=discord.Color.orange())
-        for value in usr["reasons"]:
-            if 'warns' in value and (value['warns'] == 0 or value['warns'] is None):
-                await ctx.send('Користувач або попередження не знайдені.')
-                return
-            else:
-                moderator = await bot.fetch_user(value['author_id'])
-                embed.add_field(
-                    name=f"Модератор: {moderator}", 
-                    value=f"ID: {value['case']}\n Причина: ``{value['reason']}``", 
-                    inline=False
-                )
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("Користувач або попередження не знайдені.")
 @bot.event
 async def on_message(message):
     guild = message.guild  # Get the server where the message was sent
@@ -216,9 +145,9 @@ async def on_guild_join(guild):
             }
     if cluster.testbase.collservers.count_documents({'_id': guild.id}) == 0:
         cluster.testbase.collservers.insert_one(server_values)
-@bot.command()
-async def ping(ctx):
-    await ctx.send('pong')
+#@bot.command()
+#async def ping(ctx):
+#   await ctx.send('pong')
 
 @bot.command(name='ban')
 async def ban(ctx, member: discord.Member, *, reason=None):
@@ -245,24 +174,7 @@ async def ban(ctx, member: discord.Member, *, reason=None):
             else:
                 await ctx.send('У вас недостатньо прав для блокування користувачів.')
     
-@bot.command(name='clear')
-async def clear(ctx, amount: int = 0):
-    role = discord.utils.get(ctx.guild.roles, name='Moderator')
-    if role not in ctx.author.roles:
-        await ctx.send(f'<@{ctx.author.id}>, у вас немає прав на використання даної команди.')
-        return
-    else:
-        # Змінив message_content на 'Processing...'
-        # Перевірка, чи вказано коректну кількість повідомлень для видалення
-        if amount is None or amount <= 0:
-            await ctx.send(f'<@{ctx.author.id}>, будь ласка, вкажіть коректну кількість повідомлень для видалення.', delete_after=10)
-            return
 
-        # Видалення повідомлень
-        deleted = await ctx.channel.purge(limit=amount + 1)  # +1 для включення оригінального повідомлення
-
-        # Відправлення повідомлення про кількість видалених повідомлень
-        await ctx.send(f'**✅ Успішно видалено {len(deleted) - 1} повідомлень.**')  # -1, оскільки ми включили оригінальне повідомлення
 
 @bot.command(name='profile')
 async def profile(ctx, member: discord.Member = None):
@@ -304,11 +216,12 @@ async def profile(ctx, member: discord.Member = None):
 
 
 
-# Функция проверки канала
+async def start_bot():
+    try:
+        await load_cogs(bot)
+        await bot.start('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.GHWPDt.-hQ3N_hH6wqZyTQ98UXSh1LMVMef538lg_edqo')
 
-
-
-
-
-
-bot.run('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.GHWPDt.-hQ3N_hH6wqZyTQ98UXSh1LMVMef538lg_edqo')
+    except KeyboardInterrupt:
+        await bot.close()
+        print("Bot safely disconnected.")
+asyncio.run(start_bot())
