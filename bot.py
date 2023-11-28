@@ -219,7 +219,8 @@ async def profile(ctx, member: discord.Member = None):
 async def start_bot():
     try:
         await load_cogs(bot)
-        await bot.start('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.GHWPDt.-hQ3N_hH6wqZyTQ98UXSh1LMVMef538lg_edqo')
+        token = os.getenv('TOKEN')
+        await bot.start(token)
 
     except KeyboardInterrupt:
         await bot.close()
