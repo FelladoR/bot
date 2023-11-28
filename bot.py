@@ -220,7 +220,7 @@ async def start_bot():
     try:
         await load_cogs(bot)
         token = os.getenv('TOKEN')
-        await bot.start('{token'})
+        await bot.start(token)
 
     except KeyboardInterrupt:
         await bot.close()
