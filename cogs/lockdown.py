@@ -1,10 +1,8 @@
 import discord
 from discord.ext import commands
 
-allowed_channel_ids = [1164932726877585428, 852479732691107881]
-
 def allowed_channel(ctx):
-    allowed_channel_ids = [123456789012345678, 852479732691107881]  # Список разрешенных ID каналов
+    allowed_channel_ids = [1154369014940844135, 1154395654945251398, 1163094113726496858, 1165624675968221184, 1165687096682479687, 1154453402303086693, 1173670958461108264, ]  # Список разрешенных ID каналов
 
     return ctx.channel.id in allowed_channel_ids
 
@@ -30,6 +28,7 @@ class lockdown(commands.Cog):
                                          send_messages=False,
                                          read_message_history=True,
                                          view_channel=True)
+        await ctx.message.delete()
 
         embed = discord.Embed(
             title='Канал заблокований',

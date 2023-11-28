@@ -89,7 +89,7 @@ async def on_message(message):
             }
         }
         cluster.testbase.collusers.update_one({'_id': member.id, 'guild_id': guild.id}, updated_values)
-        print(f'User {member.id} updated for guild {guild.id}')
+        #print(f'User {member.id} updated for guild {guild.id}')
 
 
 # Прочие части вашего кода
