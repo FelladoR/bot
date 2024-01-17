@@ -30,6 +30,9 @@ async def report(ctx, user: discord.User, *, reason: str):
     # Get the bot owner or moderators
     mod_channel_id = 1164932726877585428  # Replace with the ID of the channel where reports should be sent
     mod_channel = bot.get_channel(mod_channel_id)
+    if user is None or reason is None:
+        await ctx.send("Будь ласка, тегніть порушника, або вкажіть причину порушення")
+        return
 
     # Create an embed to format the report
     embed = discord.Embed(title="Репортt", color=0xff0000)
