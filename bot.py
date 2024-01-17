@@ -24,14 +24,23 @@ async def load_cogs(bot):
         print(f"Загружен файл: {filename}")
     else:
             print(f"Не удалось загрузить: {filename}")
-            
+        
+@bot.command()
+async def report(ctx, user: discord.User, *, reason: str):
+    # Get the bot owner or moderators
+    mod_channel_id = 1164932726877585428  # Replace with the ID of the channel where reports should be sent
+    mod_channel = bot.get_channel(mod_channel_id)
 
+    # Create an embed to format the report
+    embed = discord.Embed(title="Репортt", color=0xff0000)
+    embed.add_field(name="Автор", value=ctx.author.mention, inline=False)
+    embed.add_field(name="Потенційний порушник", value=user.mention, inline=False)
+    embed.add_field(name="Причина", value=reason, inline=False)
 
-
-
-
-
-
+    # Send the report to the specified channel
+    await mod_channel.send(embed=embed)
+    await ctx.send("Ваша скарга успішно надіслана!")
+    
 @bot.command()
 async def remwarn(ctx, case: int):
     if cluster.testbase.collusers.count_documents({'reasons.case': case, 'guild_id': ctx.guild.id}) == 0:
