@@ -35,14 +35,15 @@ async def report(ctx, user: discord.User, *, reason: str):
         return
 
     # Create an embed to format the report
-    embed = discord.Embed(title="Репортt", color=0xff0000)
+    embed = discord.Embed(title="Репорт", color=0xff0000)
     embed.add_field(name="Автор", value=ctx.author.mention, inline=False)
     embed.add_field(name="Потенційний порушник", value=user.mention, inline=False)
     embed.add_field(name="Причина", value=reason, inline=False)
 
     # Send the report to the specified channel
     await mod_channel.send(embed=embed)
-    await ctx.send("Ваша скарга успішно надіслана!")
+    await ctx.send("Ваша скарга успішно надіслана!", delete_after=5)
+    await ctx.message.delete()
     
 @bot.command()
 async def remwarn(ctx, case: int):
