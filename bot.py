@@ -18,20 +18,37 @@ bot = commands.Bot(command_prefix='-', intents=intents)
 
 
 async def load_cogs(bot):
-    for filename in os.listdir("cogs"):
-        if filename.endswith(".py"):
-           await bot.load_extension(f"cogs.{filename[:-3]}")
-        print(f"Загружен файл: {filename}")
-    else:
-            print(f"Не удалось загрузить: {filename}")
-            
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            try:
+                cog_name = f"cogs.{filename[:-3]}"
+                print(f"Завантажую: {cog_name}")
+                await bot.load_extension(cog_name)
+            except Exception as e:
+                print(f"Не вдалось заванжажити{cog_name}: {e}")
+        
+@bot.command()
+async def report(ctx, user: discord.User, *, reason: str):
+    if user is None or reason is None:
+        await ctx.send("Будь ласка, тегніть порушника, або вкажіть причину порушення", delete_after=10)
+        return
+    # Get the bot owner or moderators
+    mod_channel_id = 1197198368871547025  # Replace with the ID of the channel where reports should be sent
+    mod_channel = bot.get_channel(mod_channel_id)
+    
 
+    # Create an embed to format the report
+    embed = discord.Embed(title="Репорт", color=0xff0000)
+    embed.add_field(name="Автор", value='{ctx.author.mention} | {ctx.author.id}', inline=False)
+    embed.add_field(name="Потенційний порушник", value='{user.mention} | ``{user.id}``', inline=False)
+    embed.add_field(name="Причина", value=reason, inline=False)
+    embed.set_thumbnail(url=ctx.author.avatar)
 
-
-
-
-
-
+    # Send the report to the specified channel
+    await mod_channel.send(embed=embed)
+    await ctx.send("Ваша скарга успішно надіслана!", delete_after=5)
+    await ctx.message.delete()
+    
 @bot.command()
 async def remwarn(ctx, case: int):
     if cluster.testbase.collusers.count_documents({'reasons.case': case, 'guild_id': ctx.guild.id}) == 0:
@@ -50,19 +67,50 @@ async def remwarn(ctx, case: int):
         await ctx.send('Знято.')
 
 
+def load_badwords():
+    try:
+        with open("badwords.txt", "r", encoding="utf-8") as file:
+            return [line.strip() for line in file.readlines()]
+    except FileNotFoundError:
+        return []
 
+bad_words = load_badwords()
 
 @bot.event
 async def on_message(message):
+    if message.author.bot or message.guild is None:
+        return
+
     guild = message.guild  # Get the server where the message was sent
     member = message.author  # Get the message author
-    if message.author.bot:
-        return
+
     if message.content.startswith(bot.command_prefix):
-        splitted_content = message.content.split()
-        splitted_content[0] = splitted_content[0].lower()
-        message.content = ' '.join(splitted_content)
+        # Handle commands separately
         await bot.process_commands(message)
+        return
+
+    target_channel_id = 1154481844306317482  # Channel ID for automatic reactions
+    target_channel = bot.get_channel(target_channel_id)
+
+    if target_channel and message.channel == target_channel:
+        await message.add_reaction('👍')
+        await message.add_reaction('👎')
+
+    content_lower = message.content.lower()
+
+    for bad_word in bad_words:
+        if bad_word in content_lower:
+            await message.delete()
+
+            muterole_id = 1165620433647845456  # Replace with the actual muted role ID
+            muterole = discord.utils.get(guild.roles, id=muterole_id)
+
+            if muterole:
+                await message.channel.send(f"**⚠ {member.mention} отримує блокування чату до вияснення.**")
+                await member.add_roles(muterole)
+            else:
+                await message.channel.send("❌ Помилка: Роль для блокування не знайдена. Зверніться до адміністратора.")
+            return  # Stop further processing if a bad word is found
 
     # Check if the user exists in the database for this guild
     existing_user = cluster.testbase.collusers.find_one({'_id': member.id, 'guild_id': guild.id})
@@ -193,7 +241,7 @@ async def profile(ctx, member: discord.Member = None):
 
     embed.add_field(name='Ім\'я', value=member.name, inline=True)
     embed.add_field(name='Тег', value=member.discriminator, inline=True)
-    embed.add_field(name='ID', value=member.id, inline=False)
+    embed.add_field(name='ID', value='``{member.id}``', inline=False)
 
     if usr:
         embed.add_field(
@@ -219,9 +267,10 @@ async def profile(ctx, member: discord.Member = None):
 async def start_bot():
     try:
         await load_cogs(bot)
-        await bot.start('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.GHWPDt.-hQ3N_hH6wqZyTQ98UXSh1LMVMef538lg_edqo')
+        # token = os.getenv('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.Gxm5jA.zFTwmDQn1_Eur71w-L13Y8ipSam17gQ22Bl2XU')
+        await bot.start('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.Gxm5jA.zFTwmDQn1_Eur71w-L13Y8ipSam17gQ22Bl2XU')
 
     except KeyboardInterrupt:
         await bot.close()
-        print("Bot safely disconnected.")
+        print("Бот вимкнений.")
 asyncio.run(start_bot())
