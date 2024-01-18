@@ -286,8 +286,4 @@ async def start_bot():
         token = os.getenv('TOKEN')
         await bot.start(token)
 
-    except KeyboardInterrupt:
-        await bot.close()
-        print("Bot safely disconnected.")
-
 asyncio.run(start_bot())
