@@ -14,10 +14,11 @@ collservers = cluster.testbase.collservers
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='-', intents=intents) 
+bot = commands.Bot(command_prefix='>', intents=intents) 
 
 
 async def load_cogs(bot):
+
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             try:
@@ -43,6 +44,29 @@ async def report(ctx, user: discord.User, *, reason: str):
     embed.add_field(name="Потенційний порушник", value='{user.mention} | ``{user.id}``', inline=False)
     embed.add_field(name="Причина", value=reason, inline=False)
     embed.set_thumbnail(url=ctx.author.avatar)
+
+    for filename in os.listdir("cogs"):
+        if filename.endswith(".py"):
+           await bot.load_extension(f"cogs.{filename[:-3]}")
+        print(f"Загружен файл: {filename}")
+    else:
+            print(f"Не удалось загрузить: {filename}")
+        
+@bot.command()
+async def report(ctx, user: discord.User, *, reason: str):
+    # Get the bot owner or moderators
+    mod_channel_id = 1164932726877585428  # Replace with the ID of the channel where reports should be sent
+    mod_channel = bot.get_channel(mod_channel_id)
+    if user is None or reason is None:
+        await ctx.send("Будь ласка, тегніть порушника, або вкажіть причину порушення")
+        return
+
+    # Create an embed to format the report
+    embed = discord.Embed(title="Репорт", color=0xff0000)
+    embed.add_field(name="Автор", value=ctx.author.mention, inline=False)
+    embed.add_field(name="Потенційний порушник", value=user.mention, inline=False)
+    embed.add_field(name="Причина", value=reason, inline=False)
+
 
     # Send the report to the specified channel
     await mod_channel.send(embed=embed)
@@ -273,4 +297,12 @@ async def start_bot():
     except KeyboardInterrupt:
         await bot.close()
         print("Бот вимкнений.")
+
+        token = os.getenv('TOKEN')
+        await bot.start(token)
+
+    except KeyboardInterrupt:
+        await bot.close()
+        print("Bot safely disconnected.")
+
 asyncio.run(start_bot())
