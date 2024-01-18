@@ -16,25 +16,19 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='>', intents=intents) 
 
-
 async def load_cogs(bot):
-
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             try:
                 cog_name = f"cogs.{filename[:-3]}"
-                print(f"Завантажую: {cog_name}")
-                await bot.load_extension(cog_name)
+                if cog_name not in bot.extensions:
+                    print(f"Завантажую: {cog_name}")
+                    await bot.load_extension(cog_name)
+                else:
+                    print(f"Розширення вже завантажено: {cog_name}")
             except Exception as e:
-                print(f"Не вдалось заванжажити{cog_name}: {e}")
-        
-    for filename in os.listdir("cogs"):
-        if filename.endswith(".py"):
-           await bot.load_extension(f"cogs.{filename[:-3]}")
-        print(f"Загружен файл: {filename}")
-    else:
-            print(f"Не удалось загрузить: {filename}")
-        
+                print(f"Не вдалось завантажити {cog_name}: {e}")
+
 @bot.command()
 async def report(ctx, user: discord.User, *, reason: str):
     # Get the bot owner or moderators
