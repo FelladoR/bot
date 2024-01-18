@@ -37,11 +37,11 @@ class Checkwarns(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send("Эта команда не существует.")
+            await ctx.send("Дана команда не існує")
         elif isinstance(error, commands.MissingPermissions):
-            await ctx.send("У вас недостаточно прав для выполнения этой команды.")
+            await ctx.send("У вас недостатньо прав для використання цієї команди")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Вы пропустили необходимый аргумент.")
+            await ctx.send("Ви пропустили необхідний аргумент.")
         else:
             # Логирование других ошибок, которые не были обработаны
             print(f"Произошла ошибка: {error}")
