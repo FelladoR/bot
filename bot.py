@@ -49,7 +49,7 @@ async def report(ctx, user: discord.User, *, reason: str):
     await mod_channel.send(embed=embed)
     await ctx.send("Ваша скарга успішно надіслана!", delete_after=5)
     await ctx.message.delete()
-    
+
 @bot.command()
 async def remwarn(ctx, case: int):
     if cluster.testbase.collusers.count_documents({'reasons.case': case, 'guild_id': ctx.guild.id}) == 0:
@@ -105,13 +105,26 @@ async def on_message(message):
 
             muterole_id = 1165620433647845456  # Replace with the actual muted role ID
             muterole = discord.utils.get(guild.roles, id=muterole_id)
+            reportchannel = bot.get_channel(1164649565513851041)
 
             if muterole:
-                await message.channel.send(f"**⚠ {member.mention} отримує блокування чату до вияснення.**")
-                await member.add_roles(muterole)
-            else:
-                await message.channel.send("❌ Помилка: Роль для блокування не знайдена. Зверніться до адміністратора.")
-            return  # Stop further processing if a bad word is found
+               
+                current_time = time.time()
+            await message.channel.send(f"**:warning: {message.author.mention} отримує блокування чату до вияснення.**")
+            await message.author.add_roles(muterole)
+
+            embed = discord.Embed(title="Авто-модерація", color=0xff0000)
+            embed.add_field(name="Автор", value=f'{message.author} | ``{message.author.id}``', inline=False)
+            embed.add_field(name="Повідомлення", value=f'``{message.content}``', inline=False)
+            embed.add_field(name="Причина", value='до вияснення', inline=False)
+            embed.set_footer(text=time.ctime(current_time))
+            
+            await reportchannel.send(embed=embed)
+             # Додайте користувача, якщо його немає в базі даних
+
+    # Rest of your code...
+
+      # Stop further processing if a bad word is found
 
     # Check if the user exists in the database for this guild
     existing_user = cluster.testbase.collusers.find_one({'_id': member.id, 'guild_id': guild.id})
