@@ -28,23 +28,6 @@ async def load_cogs(bot):
             except Exception as e:
                 print(f"Не вдалось заванжажити{cog_name}: {e}")
         
-@bot.command()
-async def report(ctx, user: discord.User, *, reason: str):
-    if user is None or reason is None:
-        await ctx.send("Будь ласка, тегніть порушника, або вкажіть причину порушення", delete_after=10)
-        return
-    # Get the bot owner or moderators
-    mod_channel_id = 1197198368871547025  # Replace with the ID of the channel where reports should be sent
-    mod_channel = bot.get_channel(mod_channel_id)
-    
-
-    # Create an embed to format the report
-    embed = discord.Embed(title="Репорт", color=0xff0000)
-    embed.add_field(name="Автор", value='{ctx.author.mention} | {ctx.author.id}', inline=False)
-    embed.add_field(name="Потенційний порушник", value='{user.mention} | ``{user.id}``', inline=False)
-    embed.add_field(name="Причина", value=reason, inline=False)
-    embed.set_thumbnail(url=ctx.author.avatar)
-
     for filename in os.listdir("cogs"):
         if filename.endswith(".py"):
            await bot.load_extension(f"cogs.{filename[:-3]}")
@@ -291,6 +274,8 @@ async def profile(ctx, member: discord.Member = None):
 async def start_bot():
     try:
         await load_cogs(bot)
+
+
         # token = os.getenv('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.Gxm5jA.zFTwmDQn1_Eur71w-L13Y8ipSam17gQ22Bl2XU')
         await bot.start('MTE1NzQyNjEzMTE1OTQ5MDU4MQ.Gxm5jA.zFTwmDQn1_Eur71w-L13Y8ipSam17gQ22Bl2XU')
 
