@@ -7,7 +7,9 @@ class Clear(commands.Cog):
 
     @commands.command(name='clear')
     async def clear(self, ctx, amount: int = 0):
-        role = discord.utils.get(ctx.guild.roles, name='Керівник проекту')
+        role_ids = [1154369638948421764, 1178435397626363996, 1154494670441807923, 1154489392484843670]
+        role = discord.utils.get(ctx.guild.roles, id=role_ids[0] | role_ids[1] | role_ids[2] | role_ids[3])
+
         if role not in ctx.author.roles:
             await ctx.send(f'<@{ctx.author.id}>, у вас немає прав на використання даної команди.')
             return
