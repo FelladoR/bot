@@ -280,8 +280,8 @@ async def profile(ctx, member: discord.Member = None):
 
 async def start_bot():
     try:
-        await load_cogs(bot)
         load_dotenv()
+        await load_cogs(bot)
         await bot.start(os.getenv('TOKEN'))
     except KeyboardInterrupt:
         await bot.close()
