@@ -3,7 +3,7 @@ from discord.ext import commands
 import asyncio
 import time
 import os
-
+from dotenv import load_dotenv
 from pymongo import MongoClient
 from random import randint
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
@@ -32,7 +32,7 @@ async def load_cogs(bot):
 @bot.command()
 async def report(ctx, user: discord.User, *, reason: str):
     # Get the bot owner or moderators
-    mod_channel_id = 1164932726877585428  # Replace with the ID of the channel where reports should be sent
+    mod_channel_id = 1197198368871547025  # Replace with the ID of the channel where reports should be sent
     mod_channel = bot.get_channel(mod_channel_id)
     if user is None or reason is None:
         await ctx.send("Будь ласка, тегніть порушника, або вкажіть причину порушення")
@@ -46,7 +46,7 @@ async def report(ctx, user: discord.User, *, reason: str):
 
 
     # Send the report to the specified channel
-    await mod_channel.send(embed=embed)
+    await mod_channel.send('@everyone', embed=embed)
     await ctx.send("Ваша скарга успішно надіслана!", delete_after=5)
     await ctx.message.delete()
 
@@ -282,10 +282,8 @@ async def start_bot():
     try:
         await load_cogs(bot)
 
-
-        # token = os.getenv('MTEyODM2NTQ2MTQ0MTA5NzcyOA.G4g71U.dUj_ehwRoe1fT7EAOoHTmpqNr2WYue0TMVdl0k')
-        await bot.start('MTEyODM2NTQ2MTQ0MTA5NzcyOA.G4g71U.dUj_ehwRoe1fT7EAOoHTmpqNr2WYue0TMVdl0k')
-
+        load_dotenv()
+        await bot.start(os.getenv('TOKEN'))
     except KeyboardInterrupt:
         await bot.close()
         print("Бот вимкнений.")
