@@ -281,14 +281,14 @@ async def profile(ctx, member: discord.Member = None):
 async def start_bot():
     try:
         await load_cogs(bot)
-
         load_dotenv()
         await bot.start(os.getenv('TOKEN'))
     except KeyboardInterrupt:
         await bot.close()
         print("Бот вимкнений.")
 
-        token = os.getenv('TOKEN')
-        await bot.start(token)
+def main():
+    asyncio.run(start_bot())
 
-asyncio.run(start_bot())
+if __name__ == "__main__":
+    main()
