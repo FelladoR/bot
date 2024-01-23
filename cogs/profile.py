@@ -1,14 +1,15 @@
 from discord.ext import commands
 import discord
 from pymongo import MongoClient
+from bot import cluster
+cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
+
 class Profile(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
-
+     
     @commands.command(name='profile')
-    async def Profile(self, ctx, member: discord.Member = None):
-        cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
+    async def profile(self, ctx, member: discord.Member = None):
         if member is None:
             member = ctx.author
 
@@ -18,13 +19,13 @@ class Profile(commands.Cog):
         })
 
         embed = discord.Embed(title=f'Профіль користувача {member}',
-                              color=discord.Color.red())
+                              color=discord.Color.random())
 
-        embed.set_thumbnail(url=member.avatar_url)  # Set user's avatar as thumbnail
+        embed.set_thumbnail(url=member.avatar)  # Set user's avatar as thumbnail
 
         embed.add_field(name='Ім\'я', value=member.name, inline=True)
         embed.add_field(name='Тег', value=member.discriminator, inline=True)
-        embed.add_field(name='ID', value=member.id, inline=False)
+        embed.add_field(name='ID', value=f'``{member.id}``', inline=False)
 
         if usr:
             embed.add_field(
@@ -46,4 +47,5 @@ class Profile(commands.Cog):
         await ctx.send(embed=embed)
 
 async def setup(bot):
+    
     await bot.add_cog(Profile(bot))
