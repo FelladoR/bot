@@ -11,7 +11,7 @@ db = cluster['testbase']
 collection = db['testcollection']  
 collusers = cluster.testbase.collusers
 collservers = cluster.testbase.collservers
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='>', intents=intents) 
@@ -28,6 +28,25 @@ async def load_cogs(bot):
                     print(f"Розширення вже завантажено: {cog_name}")
             except Exception as e:
                 print(f"Не вдалось завантажити {cog_name}: {e}")
+
+@bot.event
+async def on_member_remove(member):
+    try:
+        # Replace with your actual guild and channel IDs
+        guild_id = 1154369014181671014
+        channel_id = 1167971043839852544
+
+        # Fetch the guild and members channel
+        guild = bot.get_guild(guild_id)
+        members_channel = bot.get_channel(channel_id)
+
+        # Update the channel name with the member count
+        await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
+        print('Вихід, канал було змінено!')
+
+    except Exception as e:
+        # Print any errors that occur during the event
+        print(f'Error in on_member_join: {e}')
 
 @bot.command()
 async def report(ctx, user: discord.User, *, reason: str):
@@ -189,15 +208,46 @@ async def on_ready():
 
 
 @bot.event
-async def on_member_join(member, guild):
+async def on_member_join(member):
+    try:
+        # Replace with your actual guild and channel IDs
+        guild_id = 1154369014181671014
+        channel_id = 1167971043839852544
+        role_id = 1154705883847217212
+
+        # Fetch the guild, members channel, and role using bot.get_*
+        guild = bot.get_guild(guild_id)
+        members_channel = bot.get_channel(channel_id)
+        role = guild.get_role(role_id)
+
+        # Update the channel name with the member count
+        await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
+
+        # Check if the role exists before attempting to add it
+        if role:
+            await member.add_roles(role)
+            print('Вхід на сервер, роль надана')
+        else:
+            print(f'Error in on_member_join: Role with ID {role_id} not found.')
+
+    except Exception as e:
+        # Print any errors that occur during the event
+        print(f'Error in on_member_join: {e}')
+
+    # Your additional code for database operations
     values = {
-                '_id': member.id,
-                'guild_id': guild.id,
-                'warns': 0,
-                'reasons': []
-            }
+        '_id': member.id,
+        'guild_id': guild.id,
+        'warns': 0,
+        'reasons': []
+    }
+
     if cluster.testbase.collusers.count_documents({'_id': member.id, 'guild_id': guild.id}) == 0:
-                cluster.testbase.collusers.insert_one(values)
+        cluster.testbase.collusers.insert_one(values)
+
+
+    
+
 
 @bot.event
 async def on_guild_join(guild):
@@ -207,9 +257,6 @@ async def on_guild_join(guild):
             }
     if cluster.testbase.collservers.count_documents({'_id': guild.id}) == 0:
         cluster.testbase.collservers.insert_one(server_values)
-#@bot.command()
-#async def ping(ctx):
-#   await ctx.send('pong')
 
 @bot.command(name='ban')
 async def ban(ctx, member: discord.Member, *, reason=None):
@@ -237,58 +284,16 @@ async def ban(ctx, member: discord.Member, *, reason=None):
                 await ctx.send('У вас недостатньо прав для блокування користувачів.')
     
 
-
-@bot.command(name='profile')
-async def profile(ctx, member: discord.Member = None):
-    if member is None:
-        member = ctx.author
-
-    usr = cluster.testbase.collusers.find_one({
-        "_id": member.id,
-        "guild_id": ctx.guild.id
-    })
-
-    embed = discord.Embed(title=f'Профіль користувача {member}',
-                          color=discord.Color.red())
-
-    embed.set_thumbnail(url=member.avatar)  # Set user's avatar as thumbnail
-
-    embed.add_field(name='Ім\'я', value=member.name, inline=True)
-    embed.add_field(name='Тег', value=member.discriminator, inline=True)
-    embed.add_field(name='ID', value='``{member.id}``', inline=False)
-
-    if usr:
-        embed.add_field(
-            name='Інформація про акаунт',
-            value=f'Дата регістрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                  f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                  f'Попереджень: {str(usr["warns"])}',
-            inline=False
-        )
-    else:
-        embed.add_field(
-            name='Інформація про акаунт',
-            value=f'Дата регістрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                  f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                  f'Попереджень: 0',
-            inline=False
-        )
-
-    await ctx.send(embed=embed)
-
-
-
 async def start_bot():
     try:
-        load_dotenv()
         await load_cogs(bot)
-        await bot.start(os.getenv('TOKEN'))
+
+        load_dotenv()
+        async with bot:
+            await bot.start(os.getenv('TOKEN'))
     except KeyboardInterrupt:
         await bot.close()
         print("Бот вимкнений.")
 
-def main():
-    asyncio.run(start_bot())
-
 if __name__ == "__main__":
-    main()
+    asyncio.run(start_bot())
