@@ -42,7 +42,7 @@ class Warn(commands.Cog):
                 )
                 # Send the embed to the user's DM channel
                 await member.send(embed=embed)
-
+                await member.ban(reason='[BOT] максимальна кількість попереджень')
             else:
                 server_data = cluster.testbase.collservers.find_one({'_id': ctx.guild.id})
                 if server_data:
