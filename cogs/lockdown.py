@@ -44,11 +44,11 @@ class Lockdown(commands.Cog):
 
         await ctx.message.delete()
 
-class Unlockall(commands.Cog):
+class Unlockdown(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='unlockall')
+    @commands.command(name='unlockdown')
     async def unlockall(self, ctx):
         allowed_channel_ids = [1154369014940844135, 1154395654945251398, 1163094113726496858, 1165624675968221184, 1165687096682479687, 1154453402303086693, 1173670958461108264, 1154481844306317482]
         if not ctx.author.guild_permissions.administrator:
@@ -76,4 +76,4 @@ class Unlockall(commands.Cog):
         await ctx.message.delete()
 async def setup(bot):
     await bot.add_cog(Lockdown(bot))
-    await bot.add_cog(Unlockall(bot))
+    await bot.add_cog(Unlockdown(bot))
