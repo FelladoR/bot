@@ -298,8 +298,8 @@ async def send_gifts():
 
                 if last_gift_message:
                     await last_gift_message.edit(embed=embed)
-                else:
-                    last_gift_message = await gift_channel.send(embed=embed)
+                #else:
+                    #last_gift_message = await gift_channel.send(embed=embed)
     except Exception as e:
         print(f'Gift error: {e}')
 

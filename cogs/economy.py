@@ -68,6 +68,9 @@ class Work(commands.Cog):
             except Exception as e:
                 print(f'Помилка помилки: {e}')
     
+import discord
+from discord.ext import commands
+
 class Shop(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -79,14 +82,17 @@ class Shop(commands.Cog):
 
     @commands.command(name='shop')
     async def shop(self, ctx):
-        embed = await self.create_shop_embed()
-        await ctx.send(embed=embed)
+        try:
+            embed = await self.create_shop_embed()
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(f'Shop error: {e}')
 
     async def create_shop_embed(self):
         embed = discord.Embed(title='Серверний магазин', color=discord.Color.blue())
         
         for item_id, item_info in self.items.items():
-            embed.set_footer('Придбати предмет: -buy (номер)')
+            embed.set_footer(text='Придбати предмет: -buy (номер)')
             embed.add_field(
                 name=f"{item_info['name']} - {item_info['price']} грн",
                 value=item_info['description'],
@@ -94,6 +100,7 @@ class Shop(commands.Cog):
             )
 
         return embed
+
 
 class Buy(commands.Cog):
     def __init__(self, bot):
