@@ -282,9 +282,7 @@ async def send_gifts():
         guild_id = 1154369014181671014  # Замініть на ваш ID сервера
         guild = bot.get_guild(guild_id)
 
-        logchannel = bot.get_channel(logs)
-        current_time = time.time()
-        await logchannel.send(f'``{time.ctime(current_time)} ``🎁Бот скинув подарунок.')
+        
 
         if guild:
             gift_channel_id = 1154369014940844135  # Замініть на ID каналу, де видаються подарунки
@@ -295,7 +293,9 @@ async def send_gifts():
                 embed = discord.Embed(title=f"🎁Подарунок від бота", color=0x97ea36)
                 embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
                 embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``>claim``\n**Статус подарунку: доступний**'
-
+                logchannel = bot.get_channel(logs)
+                current_time = time.time()
+                await logchannel.send(f'``{time.ctime(current_time)} ``🎁Бот скинув подарунок.')
                 if last_gift_message:
                     await last_gift_message.edit(embed=embed)
                 #else:
