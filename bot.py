@@ -271,7 +271,7 @@ async def on_ready():
     except Exception as e:
         print(f'Error in on_ready: {e}')
 
-last_gift_message = None  # Додайте цей рядок перед функцією send_gifts
+last_gift_message = None
 
 @tasks.loop(hours=3)  # Кожні 5 секунд видаємо подарунок
 async def send_gifts():
@@ -285,10 +285,12 @@ async def send_gifts():
         
 
         if guild:
+            
             gift_channel_id = 1154369014940844135  # Замініть на ID каналу, де видаються подарунки
             gift_channel = guild.get_channel(gift_channel_id)
 
             if gift_channel:
+
                 gift_receiver = random.choice(guild.members)
                 embed = discord.Embed(title=f"🎁Подарунок від бота", color=0x97ea36)
                 embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
@@ -298,8 +300,8 @@ async def send_gifts():
                 await logchannel.send(f'``{time.ctime(current_time)} ``🎁Бот скинув подарунок.')
                 if last_gift_message:
                     await last_gift_message.edit(embed=embed)
-                #else:
-                    #last_gift_message = await gift_channel.send(embed=embed)
+                else:
+                    last_gift_message = await gift_channel.send(embed=embed)
     except Exception as e:
         print(f'Gift error: {e}')
 
