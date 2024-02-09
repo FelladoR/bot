@@ -294,7 +294,7 @@ async def send_gifts():
                 gift_receiver = random.choice(guild.members)
                 embed = discord.Embed(title=f"🎁Подарунок від бота", color=0x97ea36)
                 embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
-                embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``!claim``\n**Статус подарунку: доступний**'
+                embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``>claim``\n**Статус подарунку: доступний**'
 
                 if last_gift_message:
                     await last_gift_message.edit(embed=embed)
@@ -323,9 +323,9 @@ async def claim(ctx):
                     if ctx.channel == gift_channel:
                         await ctx.send(f'{ctx.author.mention}, ви успішно забрали подарунок! 🎉')
                         
-                        new_embed = discord.Embed(title=f"🎁Подарунок від бота?", color=0xE84D5F)
+                        new_embed = discord.Embed(title=f"🎁Подарунок від бота", color=0xE84D5F)
                         new_embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
-                        new_embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``!claim``\n**Статус подарунку: забрано**\n**Забрав: {ctx.author}**\n**Подарунок: {present}{moneyemoji}**'
+                        new_embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``>claim``\n**Статус подарунку: забрано**\n**Забрав: {ctx.author}**\n**Подарунок: {present}{moneyemoji}**'
                         db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_balance}})
                         await last_gift_message.edit(embed=new_embed)
                         last_gift_message = None  # Позначаємо, що подарунок вже забраний, тому змінну можна очистити
