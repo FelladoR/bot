@@ -287,7 +287,7 @@ async def send_gifts():
         await logchannel.send(f'``{time.ctime(current_time)} ``🎁Бот скинув подарунок.')
 
         if guild:
-            gift_channel_id = 1164932726877585428  # Замініть на ID каналу, де видаються подарунки
+            gift_channel_id = 1154369014940844135  # Замініть на ID каналу, де видаються подарунки
             gift_channel = guild.get_channel(gift_channel_id)
 
             if gift_channel:
@@ -316,7 +316,7 @@ async def claim(ctx):
             user_balance = author_data.get("money", 0)
             new_balance = user_balance + present
             if guild:
-                gift_channel_id = 1164932726877585428  # Замініть на ID каналу, де видаються подарунки
+                gift_channel_id = 1154369014940844135  # Замініть на ID каналу, де видаються подарунки
                 gift_channel = guild.get_channel(gift_channel_id)
 
                 if gift_channel:
