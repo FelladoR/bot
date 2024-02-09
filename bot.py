@@ -1,11 +1,14 @@
 import discord # Подключаем библиотеку
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import time
 import os
+import pymongo
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import random
 from random import randint
+logs = 1205305330779688960
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
 db = cluster['testbase'] 
 collection = db['testcollection']  
@@ -36,6 +39,10 @@ async def on_member_remove(member):
         guild_id = 1154369014181671014
         channel_id = 1167971043839852544
 
+        channel = bot.bot.get_channel(logs)
+        current_time = time.time()
+        await channel.send(f'``{time.ctime(current_time)} ``🔽Учасник {member.name}(``{member.id}``) вийшов з серверу | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
+
         # Fetch the guild and members channel
         guild = bot.get_guild(guild_id)
         members_channel = bot.get_channel(channel_id)
@@ -44,6 +51,46 @@ async def on_member_remove(member):
         await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
         print('Вихід, канал було змінено!')
 
+    except Exception as e:
+        # Print any errors that occur during the event
+        print(f'Error in on_member_remove: {e}')
+
+@bot.event
+async def on_member_join(member):
+    try:
+        avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
+        # Replace with your actual guild and channel IDs
+        guild_id = 1154369014181671014
+        guild = bot.get_guild(guild_id)
+        channel_id = 1167971043839852544
+
+        channel = bot.bot.get_channel(logs)
+        current_time = time.time()
+        await channel.send(f'``{time.ctime(current_time)} ``🔼Учасник {member.name}(``{member.id}``) приєднався на сервер | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
+        
+        welcomechannel_id = 1154369014940844135
+        welcomechannel = bot.get_channel(welcomechannel_id)
+        embed = discord.Embed(title=f"Привіт!👋", color=0x7962D6)
+        embed.set_thumbnail(url=avatar_url)
+        embed.add_field(
+                    name=f"Ласкаво просимо тебе на наш сервер! Ось канали, які тобі можуть знадобитись",
+                    value='<#1154369014940844135> - тут основний чат, де ми всі спілкуємось\n<#1154395654945251398> - тут використовуємо всі команди ботів\n<#1154394799001051197> - тут написані правила серверу, можеш ознайомитись)\n',
+                    inline=False
+                )
+        embed.add_field(
+                    name=f"У нас навіть є свій Minecraft сервер!",
+                    value='Інформацію про майнкрафт сервер ти можеш глянути тут: <#1196538563769139210>',
+                    inline=False
+                )
+        embed.description = 'Бажаємо тобі всього найкращого, будь як в себе вдома) Слава Україні!'
+        embed.set_footer(text='З повагою керівництво та адміністрація серверу')
+        await welcomechannel.send(member.mention, embed=embed, delete_after=60)
+        # Fetch the guild and members channel
+        members_channel = bot.get_channel(channel_id)
+
+        # Update the channel name with the member count
+        await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
+        print('Вхід, канал було змінено!')
     except Exception as e:
         # Print any errors that occur during the event
         print(f'Error in on_member_join: {e}')
@@ -139,124 +186,230 @@ async def on_message(message):
             embed.set_footer(text=time.ctime(current_time))
             
             await reportchannel.send(embed=embed)
-             # Додайте користувача, якщо його немає в базі даних
 
-    # Rest of your code...
+        existing_user = cluster.testbase.collusers.find_one({'_id': member.id, 'guild_id': guild.id})
 
-      # Stop further processing if a bad word is found
-
-    # Check if the user exists in the database for this guild
-    existing_user = cluster.testbase.collusers.find_one({'_id': member.id, 'guild_id': guild.id})
-
-    if existing_user is None:
-        # If the user doesn't exist, add them to the database
-        values = {
-            '_id': member.id,
-            'guild_id': guild.id,
-            'warns': 0,
-            'reasons': []
-        }
+        if existing_user is None:
+        # If the user doesn't exist, add them to the database with default values
+            values = {
+                '_id': member.id,
+                'guild_id': guild.id,
+                'warns': 0,
+                'reasons': [],
+                'money': 0
+            }
         cluster.testbase.collusers.insert_one(values)
         print(f'User {member.id} inserted for guild {guild.id}')
     else:
-        # If the user already exists, you might want to update their information
-        # For example, update their warns or reasons if needed
-        # You can do this by updating the existing_user dictionary and using update_one
+        # If the user already exists, check and add missing fields
+        if 'warns' not in existing_user:
+            existing_user['warns'] = 0
+
+        if 'reasons' not in existing_user:
+            existing_user['reasons'] = []
+
+        if 'money' not in existing_user:
+            existing_user['money'] = 0
+
+        # Update the existing_user dictionary and use update_one
         updated_values = {
             '$set': {
                 'warns': existing_user['warns'],
-                'reasons': existing_user['reasons']
+                'reasons': existing_user['reasons'],
+                'money': existing_user['money']
                 # Update other fields if needed
             }
         }
         cluster.testbase.collusers.update_one({'_id': member.id, 'guild_id': guild.id}, updated_values)
-        #print(f'User {member.id} updated for guild {guild.id}')
+        # print(f'User {member.id} updated for guild {guild.id}')
 
-
-# Прочие части вашего кода
 @bot.event
 async def on_ready():
-    print('Запущено!')
-    channel_id = 851748174665875466  # Replace this ID with your channel ID
-    channel = bot.get_channel(channel_id)
-    current_time = time.time()
-    await channel.send(f'``{time.ctime(current_time)} ``Бот успішно запущений.')
-    
-    for guild in bot.guilds:
-        for member in guild.members:
-            existing_user = cluster.testbase.collusers.find_one({'_id': member.id, 'guild_id': guild.id})
-
-            if existing_user is None:
-                values = {
-                    '_id': member.id,
-                    'guild_id': guild.id,
-                    'warns': 0,
-                    'reasons': []
-                }
-                cluster.testbase.collusers.insert_one(values)
-                print(f'User {member.id} inserted for guild {guild.id}')
-            else:
-                return
-
-            server_values = {
-                '_id': guild.id,
-                'case': 0
-            }
-            if cluster.testbase.collservers.count_documents({'_id': guild.id}) == 0:
-                cluster.testbase.collservers.insert_one(server_values)
-                print(f'Server {guild.id} inserted')
-
-
-@bot.event
-async def on_member_join(member):
     try:
-        # Replace with your actual guild and channel IDs
-        guild_id = 1154369014181671014
-        channel_id = 1167971043839852544
-        role_id = 1154705883847217212
+        
+        print('Запущено!')
+        #channel_id = 851748174665875466  # Replace this ID with your channel ID
+        #channel = bot.get_channel(channel_id)
+        #current_time = time.time()
+        #await channel.send(f'``{time.ctime(current_time)} ``Бот успішно запущений.')
 
-        # Fetch the guild, members channel, and role using bot.get_*
-        guild = bot.get_guild(guild_id)
-        members_channel = bot.get_channel(channel_id)
-        role = guild.get_role(role_id)
+        # Create unique indexes for _id field in collusers and collservers
+        db.collusers.create_index([('_id', pymongo.ASCENDING)], unique=True)
+        db.collservers.create_index([('_id', pymongo.ASCENDING)], unique=True)
 
-        # Update the channel name with the member count
-        await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
+        for guild in bot.guilds:
+            for member in guild.members:
+                try:
+                    user_filter = {'_id': member.id, 'guild_id': guild.id}
+                    existing_user = db.collusers.find_one(user_filter)
 
-        # Check if the role exists before attempting to add it
-        if role:
-            await member.add_roles(role)
-            print('Вхід на сервер, роль надана')
-        else:
-            print(f'Error in on_member_join: Role with ID {role_id} not found.')
+                    if existing_user:
+                        #print(f'User {member.id} already exists for guild {guild.id}')
+                        update_data = {'$set': {'guild_id': guild.id}}
+                        db.collusers.update_one(user_filter, update_data)
+                        #print(f'User {member.id} updated for guild {guild.id}')
+                    else:
+                        user_values = {'_id': member.id, 'guild_id': guild.id, 'warns': 0, 'reasons': [], 'money': 0}
+                        db.collusers.insert_one(user_values)
+                        #print(f'User {member.id} inserted for guild {guild.id}')
+                except pymongo.errors.DuplicateKeyError as dup_error:
+                    print(f'Duplicate key error for user {member.id}: {dup_error}. Context: {member.name} in guild {guild.name}')
+
+            try:
+                server_filter = {'_id': guild.id}
+                existing_server = db.collservers.find_one(server_filter)
+
+                if existing_server:
+                    print(f'Server {guild.id} already exists in the database')
+                else:
+                    server_values = {'_id': guild.id, 'case': 0}
+                    db.collservers.insert_one(server_values)
+                    print(f'Server {guild.id} inserted')
+            except pymongo.errors.DuplicateKeyError as server_dup_error:
+                print(f'Duplicate key error for server {guild.id}: {server_dup_error}')
 
     except Exception as e:
-        # Print any errors that occur during the event
-        print(f'Error in on_member_join: {e}')
+        print(f'Error in on_ready: {e}')
 
-    # Your additional code for database operations
-    values = {
-        '_id': member.id,
-        'guild_id': guild.id,
-        'warns': 0,
-        'reasons': []
-    }
+last_gift_message = None  # Додайте цей рядок перед функцією send_gifts
 
-    if cluster.testbase.collusers.count_documents({'_id': member.id, 'guild_id': guild.id}) == 0:
-        cluster.testbase.collusers.insert_one(values)
+@tasks.loop(hours=3)  # Кожні 5 секунд видаємо подарунок
+async def send_gifts():
+    try:
+        global last_gift_message  # Додайте цей рядок
+
+        print('Checking for gifts')
+        guild_id = 1154369014181671014  # Замініть на ваш ID сервера
+        guild = bot.get_guild(guild_id)
+
+        logchannel = bot.get_channel(logs)
+        current_time = time.time()
+        await logchannel.send(f'``{time.ctime(current_time)} ``🎁Бот скинув подарунок.')
+
+        if guild:
+            gift_channel_id = 1164932726877585428  # Замініть на ID каналу, де видаються подарунки
+            gift_channel = guild.get_channel(gift_channel_id)
+
+            if gift_channel:
+                gift_receiver = random.choice(guild.members)
+                embed = discord.Embed(title=f"🎁Подарунок від бота", color=0x97ea36)
+                embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
+                embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``!claim``\n**Статус подарунку: доступний**'
+
+                if last_gift_message:
+                    await last_gift_message.edit(embed=embed)
+                else:
+                    last_gift_message = await gift_channel.send(embed=embed)
+    except Exception as e:
+        print(f'Gift error: {e}')
+
+@bot.command(name='claim')
+async def claim(ctx):
+    try:
+        global last_gift_message
+        moneyemoji = await get_custom_emoji(ctx.guild, '9243_DiscordCoin')
+        author_data = db.collusers.find_one({"_id": ctx.author.id})
+        if last_gift_message:
+            guild_id = 1154369014181671014  # Замініть на ваш ID сервера
+            guild = bot.get_guild(guild_id)
+            present = random.randint(50, 150)
+            user_balance = author_data.get("money", 0)
+            new_balance = user_balance + present
+            if guild:
+                gift_channel_id = 1164932726877585428  # Замініть на ID каналу, де видаються подарунки
+                gift_channel = guild.get_channel(gift_channel_id)
+
+                if gift_channel:
+                    if ctx.channel == gift_channel:
+                        await ctx.send(f'{ctx.author.mention}, ви успішно забрали подарунок! 🎉')
+                        
+                        new_embed = discord.Embed(title=f"🎁Подарунок від бота?", color=0xE84D5F)
+                        new_embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
+                        new_embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``!claim``\n**Статус подарунку: забрано**\n**Забрав: {ctx.author}**\n**Подарунок: {present}{moneyemoji}**'
+                        db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_balance}})
+                        await last_gift_message.edit(embed=new_embed)
+                        last_gift_message = None  # Позначаємо, що подарунок вже забраний, тому змінну можна очистити
+                        channel = bot.get_channel(logs)
+                        current_time = time.time()
+                        await channel.send(f'``{time.ctime(current_time)} ``🎁Учасник {ctx.author.name}(``{ctx.author.id}``) забрав подарунок | Подарунок: **{present}**{moneyemoji}')
+    except Exception as e:
+        print(f'Claim error: {e}')
+
+async def get_custom_emoji(guild, emoji_name):
+    custom_emoji = discord.utils.get(guild.emojis, name=emoji_name)
+    if custom_emoji:
+        return str(custom_emoji)
+    else:
+        return ""  # Або поверніть щось інше за замовчуванням
 
 
-    
+
+@send_gifts.before_loop
+async def before_send_gifts():
+    print('Waiting until bot is ready')
+    await bot.wait_until_ready()
+
+@bot.event
+async def on_ready():
+    try:
+        send_gifts.start()
+        print('Запущено!')
+  # Replace this ID with your channel ID
+        channel = bot.get_channel(logs)
+        current_time = time.time()
+        await channel.send(f'``{time.ctime(current_time)} ``🟢Бот успішно запущений.')
+
+        # Remove explicit unique specification for _id field
+        db.collusers.create_index([('_id', pymongo.ASCENDING)])
+        db.collservers.create_index([('_id', pymongo.ASCENDING)])
+
+        for guild in bot.guilds:
+            for member in guild.members:
+                try:
+                    user_filter = {'_id': member.id}
+                    existing_user = db.collusers.find_one(user_filter)
+
+                    if existing_user:
+                        #print(f'User {member.id} already exists for guild {guild.id}')
+                        update_data = {'$set': {'guild_id': guild.id}}
+                        db.collusers.update_one(user_filter, update_data)
+                        #print(f'User {member.id} updated for guild {guild.id}')
+                    else:
+                        user_values = {'_id': member.id, 'guild_id': guild.id, 'warns': 0, 'reasons': [], 'money': 0}
+                        db.collusers.insert_one(user_values)
+                        #print(f'User {member.id} inserted for guild {guild.id}')
+                except pymongo.errors.DuplicateKeyError as dup_error:
+                    print(f'Duplicate key error for user {member.id}: {dup_error}. Context: {member.name} in guild {guild.name}')
+
+            try:
+                server_filter = {'_id': guild.id}
+                existing_server = db.collservers.find_one(server_filter)
+
+                if existing_server:
+                    print(f'Server {guild.id} already exists in the database')
+                else:
+                    server_values = {'_id': guild.id, 'case': 0}
+                    db.collservers.insert_one(server_values)
+                    print(f'Server {guild.id} inserted')
+            except pymongo.errors.DuplicateKeyError as server_dup_error:
+                print(f'Duplicate key error for server {guild.id}: {server_dup_error}')
+
+    except Exception as e:
+        print(f'Error in on_ready: {e}')
+
 
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild, member):
+
     server_values = {
                 '_id': guild.id,
                 'case': 0
+                
             }
     if cluster.testbase.collservers.count_documents({'_id': guild.id}) == 0:
         cluster.testbase.collservers.insert_one(server_values)
+    
 
 @bot.command(name='ban')
 async def ban(ctx, member: discord.Member, *, reason=None):
