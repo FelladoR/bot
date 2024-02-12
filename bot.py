@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 import random
 from random import randint
+import uuid
 logs = 1205305330779688960
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
 db = cluster['testbase'] 
@@ -148,20 +149,31 @@ async def on_message(message):
     if message.author.bot or message.guild is None:
         return
 
-    guild = message.guild  # Get the server where the message was sent
-    member = message.author  # Get the message author
-
-    if message.content.startswith(bot.command_prefix):
-        # Handle commands separately
-        await bot.process_commands(message)
-        return
-
-    target_channel_id = 1154481844306317482  # Channel ID for automatic reactions
+    guild = message.guild
+    member = message.author
+    target_channel_id = 1164932726877585428
     target_channel = bot.get_channel(target_channel_id)
 
-    if target_channel and message.channel == target_channel:
-        await message.add_reaction('👍')
-        await message.add_reaction('👎')
+    try:
+        if target_channel and message.channel == target_channel:
+            bot.ideas = {}
+            bot.idea_counter = 1
+            idea_id = bot.idea_counter
+            bot.ideas[idea_id] = message.content
+            bot.idea_counter += 1
+
+            embed = discord.Embed(title=f"Ідея від {message.author.name}", color=0xa6a297)
+            embed.add_field(name=f"Опис ідеї:", value=f'{message.content}', inline=False)
+            embed.set_thumbnail(url=message.author.avatar.url)
+            embed.set_footer(text=f'Айді ідеї: {idea_id}')
+
+            sent_message = await target_channel.send(embed=embed)
+            await sent_message.add_reaction('👍')
+            await sent_message.add_reaction('👎')
+            await message.delete()
+    except Exception as e:
+        print(f'Ideas error: {e}')
+        return
 
     content_lower = message.content.lower()
 
@@ -333,7 +345,8 @@ async def claim(ctx):
                         last_gift_message = None  # Позначаємо, що подарунок вже забраний, тому змінну можна очистити
                         channel = bot.get_channel(logs)
                         current_time = time.time()
-                        await channel.send(f'``{time.ctime(current_time)} ``🎁Учасник {ctx.author.name}(``{ctx.author.id}``) забрав подарунок | Подарунок: **{present}**{moneyemoji}')
+                        await channel.send(f'``{time.ctime(current_time)} ``🎁Учасник {ctx.author.name}(``{ctx.author.id}``) забрав подарунок | Подарунок: **{present}**{moneyemoji}', delete_after=30)
+                        await ctx.message.delete()
     except Exception as e:
         print(f'Claim error: {e}')
 

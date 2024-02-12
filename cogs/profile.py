@@ -43,7 +43,7 @@ class Profile(commands.Cog):
                 warns = usr.get("warns", 0)
                 embed.add_field(
                     name='Інформація про акаунт',
-                    value=f'Дата регістрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
+                    value=f'Дата реєстрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
                           f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
                           f'Попереджень: {warns}',
                     inline=False
@@ -52,7 +52,7 @@ class Profile(commands.Cog):
                 embed.add_field(name='Цінності', value='Гроші: 0', inline=False)
                 embed.add_field(
                     name='Інформація про акаунт',
-                    value=f'Дата регістрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
+                    value=f'Дата реєстрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
                           f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
                           f'Попереджень: 0',
                     inline=False
