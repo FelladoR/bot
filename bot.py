@@ -341,11 +341,11 @@ async def claim(ctx):
                         new_embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
                         new_embed.description = f'Бот викинув випадковий подарунок! Встигни його забрати. Використай ``>claim``\n**Статус подарунку: забрано**\n**Забрав: {ctx.author}**\n**Подарунок: {present}{moneyemoji}**'
                         db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_balance}})
-                        await last_gift_message.edit(embed=new_embed)
+                        await last_gift_message.edit(embed=new_embed, delete_after=30)
                         last_gift_message = None  # Позначаємо, що подарунок вже забраний, тому змінну можна очистити
                         channel = bot.get_channel(logs)
                         current_time = time.time()
-                        await channel.send(f'``{time.ctime(current_time)} ``🎁Учасник {ctx.author.name}(``{ctx.author.id}``) забрав подарунок | Подарунок: **{present}**{moneyemoji}', delete_after=30)
+                        await channel.send(f'``{time.ctime(current_time)} ``🎁Учасник {ctx.author.name}(``{ctx.author.id}``) забрав подарунок | Подарунок: **{present}**{moneyemoji}')
                         await ctx.message.delete()
     except Exception as e:
         print(f'Claim error: {e}')
