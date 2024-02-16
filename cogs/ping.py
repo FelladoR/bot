@@ -6,6 +6,7 @@ class ping(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
+        print('Я чую команду!')
         await ctx.send(f'🏓Привіт, мій пінг: {round(self.bot.latency * 1000)} мс')
 
 async def setup(bot):

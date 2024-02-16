@@ -23,7 +23,7 @@ class Profile(commands.Cog):
             usr = cluster.testbase.collusers.find_one({"_id": member.id})
 
             embed = discord.Embed(title=f'Профіль користувача {member}',
-                                  color=0x2471A3)
+                                    color=0x2471A3)
 
             # Check if member has an avatar
             avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
@@ -44,8 +44,8 @@ class Profile(commands.Cog):
                 embed.add_field(
                     name='Інформація про акаунт',
                     value=f'Дата реєстрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                          f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                          f'Попереджень: {warns}',
+                            f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
+                            f'Попереджень: {warns}',
                     inline=False
                 )
             else:
@@ -53,8 +53,8 @@ class Profile(commands.Cog):
                 embed.add_field(
                     name='Інформація про акаунт',
                     value=f'Дата реєстрації акаунту: {member.created_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                          f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
-                          f'Попереджень: 0',
+                            f'Дата приєднання до гільдії: {member.joined_at.strftime("%d-%m-%Y %H:%M:%S")}\n'
+                            f'Попереджень: 0',
                     inline=False
                 )
 
