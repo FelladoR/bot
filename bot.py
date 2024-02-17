@@ -36,7 +36,7 @@ async def load_cogs(bot):
 @bot.event
 async def on_member_remove(member):
     try:
-        logs = 1205305330779688960  # Replace with your actual logs channel ID
+        logs = 1165690496249774242  # Replace with your actual logs channel ID
         channel = bot.get_channel(logs)
         current_time = time.time()
         await channel.send(f'``{time.ctime(current_time)} ``🔽Учасник {member.name}(``{member.id}``) вийшов з серверу | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
@@ -60,7 +60,7 @@ async def on_member_join(member):
     try:
         avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
 
-        logs = 1205305330779688960  # Replace with your actual logs channel ID
+        logs = 1165690496249774242  # Replace with your actual logs channel ID
         channel = bot.get_channel(logs)
         current_time = time.time()
         await channel.send(f'``{time.ctime(current_time)} ``🔼Учасник {member.name}(``{member.id}``) приєднався на сервер | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
@@ -224,7 +224,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print('Бот запущений!')
-    from gifts import send_gifts
+    from cogs.gifts import send_gifts
     send_gifts.start()
 
 
