@@ -34,17 +34,17 @@ async def load_cogs(bot):
                 print(f"Не вдалось завантажити {cog_name}: {e}")
 
 @bot.event
-async def on_member_remove(member, bot):
+async def on_member_remove(member):
     try:
-        # Replace with your actual guild and channel IDs
-        guild_id = 1154369014181671014
-        channel_id = 1167971043839852544
-
-        channel = bot.bot.get_channel(logs)
+        logs = 1205305330779688960  # Replace with your actual logs channel ID
+        channel = bot.get_channel(logs)
         current_time = time.time()
         await channel.send(f'``{time.ctime(current_time)} ``🔽Учасник {member.name}(``{member.id}``) вийшов з серверу | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
 
-        # Fetch the guild and members channel
+        # Replace the following with your actual guild and channel IDs
+        guild_id = 1154369014181671014
+        channel_id = 1167971043839852544
+
         guild = bot.get_guild(guild_id)
         members_channel = bot.get_channel(channel_id)
 
@@ -53,47 +53,48 @@ async def on_member_remove(member, bot):
         print('Вихід, канал було змінено!')
 
     except Exception as e:
-        # Print any errors that occur during the event
         print(f'Error in on_member_remove: {e}')
 
 @bot.event
-async def on_member_join(member, bot):
+async def on_member_join(member):
     try:
         avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
-        # Replace with your actual guild and channel IDs
-        guild_id = 1154369014181671014
-        guild = bot.get_guild(guild_id)
-        channel_id = 1167971043839852544
 
-        channel = bot.bot.get_channel(logs)
+        logs = 1205305330779688960  # Replace with your actual logs channel ID
+        channel = bot.get_channel(logs)
         current_time = time.time()
         await channel.send(f'``{time.ctime(current_time)} ``🔼Учасник {member.name}(``{member.id}``) приєднався на сервер | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
-        
-        welcomechannel_id = 1154369014940844135
-        welcomechannel = bot.get_channel(welcomechannel_id)
-        embed = discord.Embed(title=f"Привіт!👋", color=0x7962D6)
-        embed.set_thumbnail(url=avatar_url)
-        embed.add_field(
-                    name=f"Ласкаво просимо тебе на наш сервер! Ось канали, які тобі можуть знадобитись",
-                    value='<#1154369014940844135> - тут основний чат, де ми всі спілкуємось\n<#1154395654945251398> - тут використовуємо всі команди ботів\n<#1154394799001051197> - тут написані правила серверу, можеш ознайомитись)\n',
-                    inline=False
-                )
-        embed.add_field(
-                    name=f"У нас навіть є свій Minecraft сервер!",
-                    value='Інформацію про майнкрафт сервер ти можеш глянути тут: <#1196538563769139210>',
-                    inline=False
-                )
-        embed.description = 'Бажаємо тобі всього найкращого, будь як в себе вдома) Слава Україні!'
-        embed.set_footer(text='З повагою керівництво та адміністрація серверу')
-        await welcomechannel.send(member.mention, embed=embed, delete_after=60)
-        # Fetch the guild and members channel
+
+        # Replace the following with your actual guild, channel, and welcome channel IDs
+        guild_id = 1154369014181671014
+        welcome_channel_id = 1154369014940844135
+        channel_id = 1167971043839852544
+
+        guild = bot.get_guild(guild_id)
+        welcome_channel = bot.get_channel(welcome_channel_id)
         members_channel = bot.get_channel(channel_id)
 
         # Update the channel name with the member count
         await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
         print('Вхід, канал було змінено!')
+
+        embed = discord.Embed(title=f"Привіт!👋", color=0x7962D6)
+        embed.set_thumbnail(url=avatar_url)
+        embed.add_field(
+            name=f"Ласкаво просимо тебе на наш сервер! Ось канали, які тобі можуть знадобитись",
+            value='<#1154369014940844135> - тут основний чат, де ми всі спілкуємось\n<#1154395654945251398> - тут використовуємо всі команди ботів\n<#1154394799001051197> - тут написані правила серверу, можеш ознайомитись)\n',
+            inline=False
+        )
+        embed.add_field(
+            name=f"У нас навіть є свій Minecraft сервер!",
+            value='Інформацію про майнкрафт сервер ти можеш глянути тут: <#1196538563769139210>',
+            inline=False
+        )
+        embed.description = 'Бажаємо тобі всього найкращого, будь як в себе вдома) Слава Україні!'
+        embed.set_footer(text='З повагою керівництво та адміністрація серверу')
+        await welcome_channel.send(member.mention, embed=embed, delete_after=120)
+        
     except Exception as e:
-        # Print any errors that occur during the event
         print(f'Error in on_member_join: {e}')
 
 @bot.command()
@@ -223,7 +224,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print('Бот запущений!')
-    from cogs.gifts import send_gifts
+    from gifts import send_gifts
     send_gifts.start()
 
 
