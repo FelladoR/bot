@@ -33,10 +33,8 @@ async def load_cogs(bot):
             except Exception as e:
                 print(f"Не вдалось завантажити {cog_name}: {e}")
 
-
-
 @bot.event
-async def on_member_remove(member):
+async def on_member_remove(member, bot):
     try:
         # Replace with your actual guild and channel IDs
         guild_id = 1154369014181671014
@@ -59,7 +57,7 @@ async def on_member_remove(member):
         print(f'Error in on_member_remove: {e}')
 
 @bot.event
-async def on_member_join(member):
+async def on_member_join(member, bot):
     try:
         avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
         # Replace with your actual guild and channel IDs
@@ -225,7 +223,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print('Бот запущений!')
-    from cogs.gifts import send_gifts
+    from gifts import send_gifts
     send_gifts.start()
 
 
@@ -240,33 +238,6 @@ async def on_guild_join(guild, member):
     if cluster.testbase.collservers.count_documents({'_id': guild.id}) == 0:
         cluster.testbase.collservers.insert_one(server_values)
     
-
-@bot.command(name='ban')
-async def ban(ctx, member: discord.Member, *, reason=None):
-    # Перевірте, чи у бота є права на блокування користувачів
-    if member is None:
-        await ctx.send('Вкажіть користувача, якого потрібно заблокувати')
-        return
-    else:
-        if reason is None:
-            await ctx.send('Вкажіть причину блокування')
-            return
-        else:
-            if ctx.author.guild_permissions.ban_members:
-                embed = discord.Embed(
-                    title='Блокування',
-                    description=f'Адміністратор <@{ctx.message.author.id}> заблокував користувача <@{member.id}>. Причина: {str(reason)}',
-                    color=discord.Color.red()  # Колір вбудованого повідомлення
-                )
-
-                await ctx.guild.ban(member, reason=reason)
-                await ctx.message.delete()
-                # Створення об'єкта вбудованого повідомлення
-                await ctx.send(embed=embed)
-            else:
-                await ctx.send('У вас недостатньо прав для блокування користувачів.')
-    
-
 async def start_bot():
     try:
         await load_cogs(bot)
