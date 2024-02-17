@@ -223,7 +223,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print('Бот запущений!')
-    from gifts import send_gifts
+    from cogs.gifts import send_gifts
     send_gifts.start()
 
 
