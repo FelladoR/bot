@@ -70,6 +70,9 @@ async def on_member_join(member):
         welcome_channel_id = 1154369014940844135
         channel_id = 1167971043839852544
 
+        memberrole_id = 1154705883847217212
+        memberrole = discord.utils.get(member.guild.roles, id=memberrole_id)
+
         guild = bot.get_guild(guild_id)
         welcome_channel = bot.get_channel(welcome_channel_id)
         members_channel = bot.get_channel(channel_id)
@@ -77,7 +80,7 @@ async def on_member_join(member):
         # Update the channel name with the member count
         await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
         print('Вхід, канал було змінено!')
-
+        await member.add_roles(memberrole)
         embed = discord.Embed(title=f"Привіт!👋", color=0x7962D6)
         embed.set_thumbnail(url=avatar_url)
         embed.add_field(
@@ -96,6 +99,7 @@ async def on_member_join(member):
         
     except Exception as e:
         print(f'Error in on_member_join: {e}')
+
 
 @bot.command()
 async def report(ctx, user: discord.User, *, reason: str):
@@ -141,6 +145,8 @@ def load_badwords():
 
 bad_words = load_badwords()
 
+
+
 @bot.event
 async def on_message(message):
     logs_id = '1200083767423938661'
@@ -155,7 +161,8 @@ async def on_message(message):
         # Handle commands separately
         await bot.process_commands(message)
         return
-
+    
+    
     content_lower = message.content.lower()
 
     for bad_word in bad_words:
