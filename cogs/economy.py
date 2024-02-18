@@ -191,9 +191,14 @@ class Leaderboard(commands.Cog):
             embed.set_thumbnail(url=ctx.guild.icon.url if ctx.guild.icon else None)
 
             for idx, user_data in enumerate(users, start=1):
-                user = self.bot.get_user(user_data['_id'])
-                money = user_data.get("money", 0)
-                embed.add_field(name=f"{idx}. {user.display_name}", value=f"Монетки: **{money}**{moneyemoji}", inline=False)
+                user_id = user_data['_id']
+                user = self.bot.get_user(user_id)
+                
+                if user:
+                    money = user_data.get("money", 0)
+                    embed.add_field(name=f"{idx}. {user.display_name}", value=f"Монетки: **{money}**{moneyemoji}", inline=False)
+                else:
+                    embed.add_field(name=f"{idx}. User Not Found", value="Монетки: **N/A**", inline=False)
 
             await ctx.send(embed=embed)
         except Exception as e:
@@ -207,6 +212,7 @@ class Leaderboard(commands.Cog):
             return str(custom_emoji)
         else:
             return ""  # Або поверніть щось інше за замовчуванням
+
 
 class Rob(commands.Cog):
     def __init__(self, bot):
