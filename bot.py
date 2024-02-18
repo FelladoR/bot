@@ -156,13 +156,6 @@ async def on_message(message):
         await bot.process_commands(message)
         return
 
-    target_channel_id = 1154481844306317482  # Channel ID for automatic reactions
-    target_channel = bot.get_channel(target_channel_id)
-
-    if target_channel and message.channel == target_channel:
-        await message.add_reaction('👍')
-        await message.add_reaction('👎')
-
     content_lower = message.content.lower()
 
     for bad_word in bad_words:
@@ -224,7 +217,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print('Бот запущений!')
-    from cogs.gifts import send_gifts
+    from gifts import send_gifts
     send_gifts.start()
 
 
