@@ -55,51 +55,6 @@ async def on_member_remove(member):
     except Exception as e:
         print(f'Error in on_member_remove: {e}')
 
-@bot.event
-async def on_member_join(member):
-    try:
-        avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
-
-        logs = 1165690496249774242  # Replace with your actual logs channel ID
-        channel = bot.get_channel(logs)
-        current_time = time.time()
-        await channel.send(f'``{time.ctime(current_time)} ``🔼Учасник {member.name}(``{member.id}``) приєднався на сервер | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
-
-        # Replace the following with your actual guild, channel, and welcome channel IDs
-        guild_id = 1154369014181671014
-        welcome_channel_id = 1154369014940844135
-        channel_id = 1167971043839852544
-
-        memberrole_id = 1154705883847217212
-        memberrole = discord.utils.get(member.guild.roles, id=memberrole_id)
-
-        guild = bot.get_guild(guild_id)
-        welcome_channel = bot.get_channel(welcome_channel_id)
-        members_channel = bot.get_channel(channel_id)
-
-        # Update the channel name with the member count
-        await members_channel.edit(name=f'🌙Учасники: {guild.member_count}')
-        print('Вхід, канал було змінено!')
-        await member.add_roles(memberrole)
-        embed = discord.Embed(title=f"Привіт!👋", color=0x7962D6)
-        embed.set_thumbnail(url=avatar_url)
-        embed.add_field(
-            name=f"Ласкаво просимо тебе на наш сервер! Ось канали, які тобі можуть знадобитись",
-            value='<#1154369014940844135> - тут основний чат, де ми всі спілкуємось\n<#1154395654945251398> - тут використовуємо всі команди ботів\n<#1154394799001051197> - тут написані правила серверу, можеш ознайомитись)\n',
-            inline=False
-        )
-        embed.add_field(
-            name=f"У нас навіть є свій Minecraft сервер!",
-            value='Інформацію про майнкрафт сервер ти можеш глянути тут: <#1196538563769139210>',
-            inline=False
-        )
-        embed.description = 'Бажаємо тобі всього найкращого, будь як в себе вдома) Слава Україні!'
-        embed.set_footer(text='З повагою керівництво та адміністрація серверу')
-        await welcome_channel.send(member.mention, embed=embed, delete_after=120)
-        
-    except Exception as e:
-        print(f'Error in on_member_join: {e}')
-
 
 @bot.command()
 async def report(ctx, user: discord.User, *, reason: str):
@@ -224,7 +179,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print('Бот запущений!')
-    from cogs.gifts import send_gifts
+    from gifts import send_gifts
     send_gifts.start()
 
 
