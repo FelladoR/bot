@@ -1,5 +1,4 @@
 from discord.ext import commands
-from PIL import Image, ImageDraw, ImageFont
 import time, discord, random
 
 current_time = time.time()
