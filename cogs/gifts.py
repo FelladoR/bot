@@ -39,10 +39,10 @@ class Claim(commands.Cog):
                             await ctx.message.delete()
         except Exception as e:
             print(f'Claim error: {e}')
-    @tasks.loop(hours=3)
+    @tasks.loop(hours=6)
     async def send_gifts(self):
         try:
-            print('Checking for gifts')
+            #print('Checking for gifts')
             guild_id = 1154369014181671014
             guild = self.bot.get_guild(guild_id)
 

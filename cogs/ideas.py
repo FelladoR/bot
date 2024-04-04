@@ -67,7 +67,7 @@ class Accept(commands.Cog):
             await ctx.reply(f"Сталась помилка: {error}")
 
     @commands.command(name='accept')
-    async def accept(self, ctx, message_id, answer):
+    async def accept(self, ctx, message_id, *, answer):
         try:
             current_time = time.time()
 
@@ -110,7 +110,7 @@ class Decline(commands.Cog):
         self.bot = bot
 
     @commands.command(name='decline')
-    async def decline(self, ctx, message_id, answer):
+    async def decline(self, ctx, message_id, *, answer):
         try:
             allowed_user_id = 558945911980556288  # Remove quotes to make it an integer
             if ctx.author.id != allowed_user_id:

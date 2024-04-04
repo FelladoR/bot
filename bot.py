@@ -9,6 +9,7 @@ from pymongo import MongoClient
 import random
 from random import randint
 import uuid
+
 logs = 1205305330779688960
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
 db = cluster['testbase'] 
@@ -99,8 +100,6 @@ def load_badwords():
         return []
 
 bad_words = load_badwords()
-
-
 
 @bot.event
 async def on_message(message):

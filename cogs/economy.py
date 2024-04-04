@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 import random
-from bot import pymongo, logs, time
+from bot import pymongo, logs, time, asyncio
 from pymongo import MongoClient
 # Встановлення з'єднання з базою даних
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
 db = cluster['testbase'] 
 collection = db['testcollection'] 
-
-
+clans_collection = db["clans"]
+collservers = db['collservers']
 class Work(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -75,8 +75,10 @@ class Shop(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.items = {
-            '1': {'name': '1.Роль "Транжира"', 'price': 100, 'description': 'Можете придбати цю унікульну роль xD', 'role_id': 1168323046545829969},
-            '2': {'name': '2.Предмет 2', 'price': 20, 'description': 'Опис предмета 2'},
+            '1': {'name': '1.Роль "Транжира"', 'price': 100, 'description': 'Можете придбати цю унікальну роль xD', 'role_id': 1168323046545829969},
+            '2': {'name': '2.Роль "Бізнесмен"', 'price': 500, 'description': 'Можете придбати цю унікальну роль xD', 'role_id': 1220461712881225748},
+            '3': {'name': '3.Роль "Няшка"', 'price': 1000, 'description': 'Роль для справжніх няшок)', 'role_id': 1220465364027314206},
+            '4': {'name': 'Створити клан', 'price': 20000, 'description': 'Ця покупка дозволяє створити клан)'}
             # Додайте інші товари за аналогією
         }
 
@@ -107,16 +109,19 @@ class Buy(commands.Cog):
         self.bot = bot
 
         self.items = {
-            '1': {'name': '1.Роль "Транжира"', 'price': 100, 'description': 'Можете придбати цю унікульну роль xD', 'role_id': 1168323046545829969},
-            '2': {'name': '2.Предмет 2', 'price': 20, 'description': 'Опис предмета 2'},
+            '1': {'name': 'Роль "Транжира"', 'price': 100, 'description': 'Можете придбати цю унікальну роль xD', 'role_id': 1168323046545829969},
+            '2': {'name': 'Роль "Бізнесмен"', 'price': 500, 'description': 'Можете придбати цю унікальну роль xD', 'role_id': 1220461712881225748},
+            '3': {'name': 'Роль "Няшка"', 'price': 1000, 'description': 'Роль для справжніх няшок)', 'role_id': 1220465364027314206},
+            '4': {'name': 'Створити клан', 'price': 20000, 'description': 'Ця покупка дозволяє створити клан)'}
             # Додайте інші товари за аналогією
         }
 
+
     @commands.command(name='buy')
     async def buy(self, ctx, item_id):
-        try:    
+        try:
             moneyemoji = await self.get_custom_emoji(ctx.guild, '9243_DiscordCoin')
-            # Переконайтеся, що self.items доступне у вашому класі
+            
             if item_id not in self.items:
                 await ctx.send("Цього товару не існує.")
                 return
@@ -124,39 +129,101 @@ class Buy(commands.Cog):
             item_info = self.items[item_id]
             price = item_info['price']
 
-            # Отримання користувача з бази даних
             user_data = db.collusers.find_one_and_update(
                 {"_id": ctx.author.id},
-                {"$setOnInsert": {"money": 0}},  # Додати поле, якщо документ не існує
-                upsert=True,  # Створювати документ, якщо його немає
-                return_document=True  # Повертати оновлений документ
+                {"$setOnInsert": {"money": 0}},
+                upsert=True,
+                return_document=True
             )
 
             user_balance = user_data.get("money", 0)
 
             if user_balance < price:
-                embed = discord.Embed(title=f"❌Не так швидко", color=0xff0000)
+                embed = discord.Embed(title=f"❌Недостатньо коштів", color=0xff0000)
                 embed.set_thumbnail(url=ctx.author.avatar.url)
-                embed.description = f'{ctx.author.mention}, у тебе недостатньо грошей на балансі для покупки.'
+                embed.description = f'{ctx.author.mention}, у вас недостатньо грошей на балансі для покупки.'
                 await ctx.send(embed=embed)
                 return
 
-            # Видалення грошей та додавання товару
             new_balance = user_balance - price
             db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_balance}})
 
-            # Додавання ролі або іншого ефекту від покупки
-            # Наприклад, додавання ролі на сервері
             role_id = item_info.get('role_id')
             if role_id:
                 role = ctx.guild.get_role(role_id)
                 if role:
                     await ctx.author.add_roles(role)
 
-            embed = discord.Embed(title=f"✅Успішно", color=0xa3f046)
-            embed.set_thumbnail(url=ctx.author.avatar.url)
-            embed.description = f'{ctx.author.mention}, покупка успішна! З вашого балансу було списано **{price}{moneyemoji}**'
-            await ctx.send(embed=embed)
+            if item_id == '4':
+                existing_clan = clans_collection.find_one({"members": ctx.author.id})
+                if existing_clan:
+                    await ctx.send(f'{ctx.author.mention}, ви вже є у клані {existing_clan["name"]}.')
+                    return
+
+                async def check(m):
+                    if len(m.content) < 4:
+                        await ctx.send('**❌Мінімальна кількість символів - 4. Процес створення клану скасовано.**')
+                        return False
+                    return m.author == ctx.author and m.channel == ctx.channel
+
+                embed = discord.Embed(
+                    title='🔱Створення клану',
+                    description=f'Ти запустив процес створення клану. Введи знизу назву клану яку ти бажаєш.\n**Важливо: назву змінити неможливо. Також мінімальна кількість символів - 4**',
+                    color=discord.Color.red()
+                )
+                await ctx.send(embed=embed)
+                try:
+                    response = await self.bot.wait_for('message', check=check, timeout=60)
+                    clan_name = response.content
+                    if len(clan_name) < 4:
+                        await ctx.send('**❌Мінімальна кількість символів - 4. Процес створення клану скасовано.**')
+                        return
+
+                    # Перевірка чи учасник вже є в клані
+                    existing_clan = clans_collection.find_one({"members": ctx.author.id})
+                    if existing_clan and existing_clan["leader_id"] != ctx.author.id:
+                        await ctx.send(f'{ctx.author.mention}, ви вже є у клані {existing_clan["name"]}.')
+                        return
+
+                    max_member_limit = 30
+
+                    new_clan = {
+                        "name": clan_name,
+                        "leader_id": ctx.author.id,
+                        "members": [ctx.author.id],
+                        "moderator1_id": None,
+                        "moderator2_id": None,
+                        "clanbank": 0,
+                        "max_member_limit": max_member_limit
+                    }
+                    clans_collection.insert_one(new_clan)
+
+                    await ctx.send(f"Клан {clan_name} успішно створено!")
+
+                    # Очікування відповіді на підтвердження покупки
+                    embed_confirm = discord.Embed(
+                        title=f"✅Успішно",
+                        color=0xa3f046
+                    )
+                    embed_confirm.set_thumbnail(url=ctx.author.avatar.url)
+                    embed_confirm.description = f'{ctx.author.mention}, покупка успішна! З вашого балансу було списано **{price}{moneyemoji}**'
+                    await ctx.send(embed=embed_confirm)
+
+                except asyncio.TimeoutError:
+                    await ctx.send('Час вийшов. Спробуйте ще раз.')
+                    return
+
+
+
+
+
+            embed_confirm = discord.Embed(
+            title=f"✅Успішно",
+            color=0xa3f046
+            )
+            embed_confirm.set_thumbnail(url=ctx.author.avatar.url)
+            embed_confirm.description = f'{ctx.author.mention}, покупка успішна! З вашого балансу було списано **{price}{moneyemoji}**'
+            await ctx.send(embed=embed_confirm)
             channel = self.bot.get_channel(logs)
             current_time = time.time()
             await channel.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) придбав предмет ({item_info["name"]} | Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
@@ -165,6 +232,8 @@ class Buy(commands.Cog):
             await ctx.send("Виникла помилка. Зазначений товар не існує.")
         except pymongo.errors.PyMongoError as e:
             await ctx.send(f"Виникла помилка при взаємодії з базою даних: {e}")
+
+
 
 
     async def get_custom_emoji(self, guild, emoji_name):
@@ -212,6 +281,8 @@ class Leaderboard(commands.Cog):
             return str(custom_emoji)
         else:
             return ""  # Або поверніть щось інше за замовчуванням
+    
+
 
 
 class Rob(commands.Cog):
@@ -222,6 +293,16 @@ class Rob(commands.Cog):
     @commands.command(name='rob')
     async def rob(self, ctx, member: discord.Member = None):
         try:
+            if member is not None and member.id == ctx.author.id:
+
+
+
+                embed = discord.Embed(title=f"❌Помилка", color=0xf24835)
+                embed.set_thumbnail(url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
+                embed.description = f'{ctx.author.mention}, Ти не можеш пограбувати самого себе.'
+                await ctx.send(embed=embed)
+                self.rob.reset_cooldown(ctx)
+                return
             if member is None:
                 embed = discord.Embed(title=f"❌Помилка", color=0xf24835)
                 embed.set_thumbnail(url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
@@ -279,7 +360,7 @@ class Rob(commands.Cog):
                 # Оновлення балансу користувача
                 db.collusers.update_one({"_id": member.id}, {"$set": {"money": new_balance}})
                 db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_authorbalance}})
-
+            await ctx.message.delete()
         except Exception as e:
             print(f'rob error: {e}')
     @rob.error
@@ -302,9 +383,52 @@ class Rob(commands.Cog):
             return str(custom_emoji)
         else:
             return ""  # Або поверніть щось інше за замовчуванням
+    @commands.command(name='pay')
+    async def pay(self, ctx, receiver: discord.Member, amount: int):
+        try:
+            amount = float(amount)
+        except ValueError:
+            await ctx.send("❌Неправильно вказано артумент 'кількість грошей'.")
+            return
+
+        if amount <= 0:
+
+            await ctx.send("**❌Сума повинна бути додатнім числом.**")
+            return
+
+        sender_id = ctx.author.id
+        receiver_id = receiver.id
+
+        # Отримання комісії з бази даних
+        commission_rate_record = collservers.find_one({"_id": ctx.guild.id}, {"commission_rate": 1})
+
+        if commission_rate_record is None:
+            await ctx.send("Помилка: не вдалося отримати дані про комісію.")
+            return
+
+        commission_rate = commission_rate_record.get("commission_rate", 0)
+        commission = amount * commission_rate / 100  # Отримання відсоткової величини комісії
+
+
+
+        # Перевірка балансу відправника
+        sender_balance = db.collusers.find_one({"_id": sender_id}, {"money": 1})
+        if sender_balance is None or sender_balance.get("money", 0) < (amount + commission):
+            await ctx.send("**❌У вас недостатньо коштів для здійснення цієї транзакції.**")
+            return
+
+        # Зняття грошей з балансу відправника та додавання їх до балансу отримувача
+        db.collusers.update_one({"_id": sender_id}, {"$inc": {"money": -1 * (amount + commission)}})
+        db.collusers.update_one({"_id": receiver_id}, {"$inc": {"money": amount - commission}})
+
+        await ctx.send(f"**✅Транзакція виконана успішно. Комісія: {commission}.**")
+
+
+
+
 
 async def setup(bot):   
-    await bot.add_cog(Work(bot))
+    await bot.add_cog(Work(bot))    
     await bot.add_cog(Shop(bot))
     await bot.add_cog(Buy(bot))
     await bot.add_cog(Leaderboard(bot))
