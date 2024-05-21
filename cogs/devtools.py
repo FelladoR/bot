@@ -16,7 +16,7 @@ class Settings(commands.Cog):
         self.bot = bot
     @commands.command()
     @commands.has_permissions(administrator=True)
-    @commands.has_any_role('Керівник проекту', 'Куратор серверу')
+    @commands.has_any_role('Розробник', 'Куратор серверу')
     async def set_commission(self, ctx, commission_rate: float):
         try:
             # Перевірка, чи вказана комісія менша або рівна 100%
@@ -37,7 +37,7 @@ class Settings(commands.Cog):
             await ctx.send("**❌Під час встановлення комісії виникла помилка. Будь ласка, спробуйте ще раз пізніше.**")
 
     @commands.command()
-    @commands.has_any_role('Керівник проекту', 'Куратор серверу')
+    @commands.has_any_role('Розробник', 'Куратор серверу')
     async def devpanel(self, ctx):
         commission_data = collservers.find_one({"_id": ctx.guild.id})
         commission_rate = commission_data.get("commission_rate", 0.0)
@@ -50,7 +50,7 @@ class Settings(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.has_any_role('Керівник проекту', 'Куратор серверу')
+    @commands.has_any_role('Розробник', 'Куратор серверу')
     async def getclanid(self, ctx, *, clan_name: str):
         try:
             # Пошук клану за назвою у базі даних
@@ -67,7 +67,7 @@ class Settings(commands.Cog):
             await ctx.send("Виникла помилка при спробі отримати ID клану. Будь ласка, спробуйте ще раз пізніше.")
 
     @commands.command()
-    @commands.has_any_role('Керівник проекту')
+    @commands.has_any_role('Розробник')
     async def deleteclan(self, ctx, clan_id: str):
         try:
             # Перевірка, чи користувач має право на видалення клану (наприклад, чи є він адміністратором)

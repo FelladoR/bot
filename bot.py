@@ -1,14 +1,9 @@
 import discord # Подключаем библиотеку
 from discord.ext import commands, tasks
-import asyncio
-import time
-import os
-import pymongo
+import asyncio, aiohttp, time, os, pymongo, random, uuid
 from dotenv import load_dotenv
 from pymongo import MongoClient
-import random
 from random import randint
-import uuid
 
 logs = 1205305330779688960
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
@@ -37,10 +32,26 @@ async def load_cogs(bot):
 @bot.event
 async def on_member_remove(member):
     try:
+        session = aiohttp.ClientSession()
+        webhook_url = 'https://discord.com/api/webhooks/1165690779457564702/ctZvK5zT5aXAUJsxyc32IJbDMWP8pM8V5HFkyuCT-QA6jH_AMiziyY51d2Iodq_XLt2v'
+        webhook = discord.Webhook.from_url(webhook_url, session=session)
         logs = 1165690496249774242  # Replace with your actual logs channel ID
-        channel = bot.get_channel(logs)
-        current_time = time.time()
-        await channel.send(f'``{time.ctime(current_time)} ``🔽Учасник {member.name}(``{member.id}``) вийшов з серверу | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
+        
+        join_date = member.joined_at.timestamp()  # Перетворюємо дату приєднання в мітку часу
+        now = time.time()
+        time_on_server_seconds = now - join_date
+        time_on_server_days = time_on_server_seconds / (24 * 3600)
+        
+        embed = discord.Embed(title=f'Учасник вийшов з серверу',color=0xee8168)
+
+        # Check if member has an avatar
+        avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
+        embed.set_thumbnail(url=avatar_url)  # Set user's avatar as thumbnail
+
+        embed.add_field(name='Користувач', value=f'Нікнейм: **{member.name}**({member.mention})\nID: **{member.id}**', inline=True),
+        #embed.add_field(name='Пробув на сервері:', value=f'{time_on_server_days}', inline=False)
+
+        await webhook.send(embed=embed)
 
         # Replace the following with your actual guild and channel IDs
         guild_id = 1154369014181671014
@@ -55,6 +66,8 @@ async def on_member_remove(member):
 
     except Exception as e:
         print(f'Error in on_member_remove: {e}')
+    finally:
+        await session.close()
 
 
 @bot.command()
@@ -181,6 +194,48 @@ async def on_ready():
     from gifts import send_gifts
     send_gifts.start()
 
+#@bot.command()
+async def makemoney():
+    try:
+        all_users = db.collusers.find({})  # Отримання всіх користувачів з бази даних
+        
+        for user in all_users:
+            user_id = user["_id"]
+            if "money" not in user:
+                print(f"Користувач {user_id} не має ключа 'money'.")
+                continue
+
+            current_balance = user["money"]
+            
+            # Перевірка, чи є число нецілим
+            if current_balance != int(current_balance):
+                # Округлення числа до найближчого цілого
+                rounded_balance = round(current_balance)
+                
+                # Оновлення балансу у базі даних
+                db.collusers.update_one({"_id": user_id}, {"$set": {"money": rounded_balance}})
+                
+                print(f"Баланс користувача {user_id} був округлений з {current_balance} до {rounded_balance}.")
+    except Exception as e:
+        print(f'Makemoney error: {e}')
+
+
+async def makemoney_scheduler():
+    try:
+        await makemoney()
+        while True:
+            await asyncio.sleep(60)  # Повторювати кожну хвилину
+    except Exception as e:
+        print(f'Makemoney_scheduler error: {e}')
+
+@bot.command()
+@commands.has_any_role('Розробник')
+async def start_makemoney(ctx):
+    try:
+        bot.loop.create_task(makemoney_scheduler())  # Запуск планувальника makemoney
+        await ctx.send('Планувальник makemoney запущено!')
+    except Exception as e:
+        print(f'start_makemoney error: {e}')
 
 @bot.event
 async def on_guild_join(guild, member):

@@ -1,6 +1,6 @@
 from discord.ext import commands
 import time
-from bot import discord
+from bot import discord, aiohttp
 
 current_time = time.time()
 
@@ -12,8 +12,12 @@ class Messagedelete(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, message):
         try:
-            logs_channel_id = 1165690450443780206
-            logchannel = self.bot.get_channel(logs_channel_id)  # logs_channel_id - ID каналу для логів
+            session = aiohttp.ClientSession()
+            webhook_url = 'https://discord.com/api/webhooks/1165690901696356494/8LQvbVhimNvBpPevflPZl3PUFKt-2Kn_xJd3eIkD6htoPhP1l1rjrx18Zthem79XyPo2'
+            webhook = discord.Webhook.from_url(webhook_url, session=session)
+
+            #logs_channel_id = 1165690450443780206
+            #logchannel = self.bot.get_channel(logs_channel_id)  # logs_channel_id - ID каналу для логів
             member = message.author
             avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
             
@@ -23,10 +27,12 @@ class Messagedelete(commands.Cog):
             embed.add_field(name='Канал', value=f'<#{message.channel.id}>', inline=True)
             embed.add_field(name='Користувач', value=f'{member.name} | ``{member.id}``', inline=True)
             embed.set_footer(text=time.ctime(time.time()))
-            await logchannel.send(embed=embed)
+            await webhook.send(embed=embed)
         except Exception as e:
             print(f'Deletemessage error: {e}')
             return
+        finally:
+            await session.close()
 
 async def setup(bot):
     await bot.add_cog(Messagedelete(bot))

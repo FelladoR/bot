@@ -1,18 +1,24 @@
 import discord
 from discord.ext import commands
 import random
-from bot import pymongo, logs, time, asyncio
+from bot import pymongo, logs, time, asyncio, aiohttp
 from pymongo import MongoClient
+from math import trunc, floor
 # Встановлення з'єднання з базою даних
 cluster = MongoClient('mongodb+srv://FelladoR:maxum26072007@cluster0.o9csmz1.mongodb.net/?retryWrites=true&w=majority')
 db = cluster['testbase'] 
 collection = db['testcollection'] 
 clans_collection = db["clans"]
 collservers = db['collservers']
+
+session = aiohttp.ClientSession()
+webhook_url = 'https://discord.com/api/webhooks/1225791664627646575/JF-j_jdPzXjsH6Rdo6nR5uPWEkTXqclhZcjyRDKxYJJG4HmDQxoz2Io35hAYgLpGRa7W'
+webhook = discord.Webhook.from_url(webhook_url, session=session)
+
 class Work(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+    
     @commands.command(name='work')
     @commands.cooldown(1, 43200, commands.BucketType.user)
     async def work(self, ctx):
@@ -25,7 +31,7 @@ class Work(commands.Cog):
                 return_document=True  # Повертати оновлений документ
             )
 
-            earned_money = random.randint(5, 20)
+            earned_money = random.randint(5, 35)
 
             # Оновити баланс користувача
             new_balance = user_data.get("money", 0) + earned_money
@@ -41,12 +47,13 @@ class Work(commands.Cog):
             await ctx.send(embed=embed)
             channel = self.bot.get_channel(logs)
             current_time = time.time()
-            await channel.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) отримав гроші(work) | Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
+            await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) отримав гроші(work) | Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
+            await session.close()
         except Exception as e:
             print(f'Помилка у команді work: {e}')
             return
 
-        
+    
     async def get_custom_emoji(self, guild, emoji_name):
         custom_emoji = discord.utils.get(guild.emojis, name=emoji_name)
         if custom_emoji:
@@ -120,6 +127,9 @@ class Buy(commands.Cog):
     @commands.command(name='buy')
     async def buy(self, ctx, item_id):
         try:
+            session = aiohttp.ClientSession()
+            webhook_url = 'https://discord.com/api/webhooks/1225791664627646575/JF-j_jdPzXjsH6Rdo6nR5uPWEkTXqclhZcjyRDKxYJJG4HmDQxoz2Io35hAYgLpGRa7W'
+            webhook = discord.Webhook.from_url(webhook_url, session=session)
             moneyemoji = await self.get_custom_emoji(ctx.guild, '9243_DiscordCoin')
             
             if item_id not in self.items:
@@ -226,12 +236,14 @@ class Buy(commands.Cog):
             await ctx.send(embed=embed_confirm)
             channel = self.bot.get_channel(logs)
             current_time = time.time()
-            await channel.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) придбав предмет ({item_info["name"]} | Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
-
+            await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) придбав предмет ({item_info["name"]} | Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
+            await session.close()
         except KeyError:
             await ctx.send("Виникла помилка. Зазначений товар не існує.")
         except pymongo.errors.PyMongoError as e:
             await ctx.send(f"Виникла помилка при взаємодії з базою даних: {e}")
+
+            
 
 
 
@@ -294,9 +306,7 @@ class Rob(commands.Cog):
     async def rob(self, ctx, member: discord.Member = None):
         try:
             if member is not None and member.id == ctx.author.id:
-
-
-
+           
                 embed = discord.Embed(title=f"❌Помилка", color=0xf24835)
                 embed.set_thumbnail(url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
                 embed.description = f'{ctx.author.mention}, Ти не можеш пограбувати самого себе.'
@@ -341,8 +351,9 @@ class Rob(commands.Cog):
                 await ctx.send(embed=embed)
                 channel = self.bot.get_channel(logs)
                 current_time = time.time()
-                await channel.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) втратив гроші (rob)| Старий баланс: **{author_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_authorbalance}{moneyemoji}**')
+                await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) втратив гроші (rob)| Старий баланс: **{author_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_authorbalance}{moneyemoji}**')
                 db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_authorbalancefailed}})
+                
                 
             else:
                 embed = discord.Embed(title=f"✅Успішно", color=0xa3f046)
@@ -351,11 +362,11 @@ class Rob(commands.Cog):
                 await ctx.send(embed=embed)
                 channel = self.bot.get_channel(logs)
                 current_time = time.time()
-                await channel.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) отримав гроші (rob)| Старий баланс: **{author_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_authorbalance}{moneyemoji}**')
+                await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {ctx.author.name}(``{ctx.author.id}``) отримав гроші (rob)| Старий баланс: **{author_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_authorbalance}{moneyemoji}**')
                 db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_authorbalancefailed}})
                 channel = self.bot.get_channel(logs)
                 current_time = time.time()
-                await channel.send(f'``{time.ctime(current_time)} ``💰Учасник {member.name}(``{member.id}``) втратив гроші (rob)| Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
+                await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {member.name}(``{member.id}``) втратив гроші (rob)| Старий баланс: **{user_data.get("money", 0)}{moneyemoji}** | Новий баланс: **{new_balance}{moneyemoji}**')
                 db.collusers.update_one({"_id": ctx.author.id}, {"$set": {"money": new_authorbalancefailed}})
                 # Оновлення балансу користувача
                 db.collusers.update_one({"_id": member.id}, {"$set": {"money": new_balance}})
@@ -363,6 +374,8 @@ class Rob(commands.Cog):
             await ctx.message.delete()
         except Exception as e:
             print(f'rob error: {e}')
+        finally:
+            await session.close()
     @rob.error
     async def work_error(self, context, error):
         if isinstance(error, commands.CommandOnCooldown):
@@ -385,19 +398,27 @@ class Rob(commands.Cog):
             return ""  # Або поверніть щось інше за замовчуванням
     @commands.command(name='pay')
     async def pay(self, ctx, receiver: discord.Member, amount: int):
+        guild = ctx.guild
         try:
-            amount = float(amount)
+            amount = int(amount)
         except ValueError:
-            await ctx.send("❌Неправильно вказано артумент 'кількість грошей'.")
+            await ctx.send("❌Неправильно вказано аргумент 'кількість грошей'.")
             return
 
+        current_time = time.time()
         if amount <= 0:
-
             await ctx.send("**❌Сума повинна бути додатнім числом.**")
             return
-
+        
+        moneyemoji = await self.get_custom_emoji(ctx.guild, '9243_DiscordCoin')
         sender_id = ctx.author.id
         receiver_id = receiver.id
+        sender = ctx.author
+        receiver = await guild.fetch_member(receiver_id)
+
+        if receiver_id == ctx.author.id:
+            await ctx.send('**❌Ти не можеш перевести гроші сам собі**')
+            return
 
         # Отримання комісії з бази даних
         commission_rate_record = collservers.find_one({"_id": ctx.guild.id}, {"commission_rate": 1})
@@ -409,19 +430,40 @@ class Rob(commands.Cog):
         commission_rate = commission_rate_record.get("commission_rate", 0)
         commission = amount * commission_rate / 100  # Отримання відсоткової величини комісії
 
-
-
-        # Перевірка балансу відправника
+        # Розрахунок суми для відправлення включаючи комісію
+        total_amount_with_commission = amount + commission
+        
+        # Отримання балансу відправника
         sender_balance = db.collusers.find_one({"_id": sender_id}, {"money": 1})
-        if sender_balance is None or sender_balance.get("money", 0) < (amount + commission):
+        receiver_balance = db.collusers.find_one({"_id": receiver_id}, {"money": 1})
+        if sender_balance is None or sender_balance.get("money", 0) < total_amount_with_commission:
             await ctx.send("**❌У вас недостатньо коштів для здійснення цієї транзакції.**")
             return
+        
+        # Зняття грошей з балансу відправника (сума для відправлення включає комісію)
+        db.collusers.update_one({"_id": sender_id}, {"$inc": {"money": -total_amount_with_commission}})
+        
+        # Додавання грошей до балансу отримувача (без комісії)
+        db.collusers.update_one({"_id": receiver_id}, {"$inc": {"money": amount}})
+        
+        # Отримання нових балансів
+        new_sender_balance = db.collusers.find_one({"_id": sender_id}, {"money": 1}).get("money", 0)
+        new_receiver_balance = db.collusers.find_one({"_id": receiver_id}, {"money": 1}).get("money", 0)
 
-        # Зняття грошей з балансу відправника та додавання їх до балансу отримувача
-        db.collusers.update_one({"_id": sender_id}, {"$inc": {"money": -1 * (amount + commission)}})
-        db.collusers.update_one({"_id": receiver_id}, {"$inc": {"money": amount - commission}})
+        await ctx.send(f"**✅Транзакція виконана успішно. Сума відправлення: {amount}{moneyemoji}, Комісія: {commission}{moneyemoji}.**")
+        await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {sender.name}(``{sender.id}``) перевів гроші користувачу {receiver.name}(``{receiver_id}``) (pay)| Старий баланс: **{sender_balance}{moneyemoji}** | Новий баланс: **{new_sender_balance}{moneyemoji}**')
+        await webhook.send(f'``{time.ctime(current_time)} ``💰Учасник {receiver.name}(``{receiver_id}``) отримав переказ від {sender.name}(``{sender.id}``) (pay)| Старий баланс: **{receiver_balance}{moneyemoji}** | Новий баланс: **{new_receiver_balance}{moneyemoji}**')
 
-        await ctx.send(f"**✅Транзакція виконана успішно. Комісія: {commission}.**")
+    async def get_custom_emoji(self, guild, emoji_name):
+        custom_emoji = discord.utils.get(guild.emojis, name=emoji_name)
+        if custom_emoji:
+            return str(custom_emoji)
+        else:
+            return ""  # Або поверніть щось інше за замовчуванням
+
+
+
+
 
 
 

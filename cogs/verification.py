@@ -1,6 +1,6 @@
 from discord.ext import commands
 import time, discord, random
-
+import aiohttp
 current_time = time.time()
 
 class Onmemberjoin(commands.Cog):
@@ -34,10 +34,20 @@ class Onmemberjoin(commands.Cog):
                 #    embed.description = f'Ви успішно пройшли перевірку. Слава Україні!🇺🇦'
                 #    embed.set_footer(text=time.ctime(time.time()))
                 #    await member.send(embed=embed)
-            logs_id = 1165690496249774242
-            channel = self.bot.get_channel(logs_id)
+            session = aiohttp.ClientSession()
+            webhook_url = 'https://discord.com/api/webhooks/1165690779457564702/ctZvK5zT5aXAUJsxyc32IJbDMWP8pM8V5HFkyuCT-QA6jH_AMiziyY51d2Iodq_XLt2v'
+            webhook = discord.Webhook.from_url(webhook_url, session=session)
             current_time = time.time()
-            await channel.send(f'``{time.ctime(current_time)} ``🔼Учасник {member.name}(``{member.id}``) приєднався на сервер | Дата регістрації: ``{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}``')
+            embed = discord.Embed(title=f'Учасник зайшов на сервер',color=0x82ee82)
+
+            # Check if member has an avatar
+            avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
+            embed.set_thumbnail(url=avatar_url)  # Set user's avatar as thumbnail
+
+            embed.add_field(name='Користувач', value=f'Нікнейм: **{member.name}**({member.mention})\nID: **{member.id}**', inline=True),
+            embed.add_field(name='Зареєстрований', value=f'{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}', inline=False)
+
+            await webhook.send(embed=embed)
 
             guild_id = 1154369014181671014
             welcome_channel_id = 1154369014940844135
@@ -75,6 +85,8 @@ class Onmemberjoin(commands.Cog):
 
         except Exception as e:
             print(f'Error in on_member_join: {e}')
+        finally:
+            await session.close()
 
 async def setup(bot):
     await bot.add_cog(Onmemberjoin(bot))

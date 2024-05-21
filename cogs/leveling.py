@@ -50,16 +50,18 @@ class Level(commands.Cog):
                     user_data["experience"] = 0  # Якщо відсутній, встановлюємо початкове значення
                 if "level" not in user_data:
                     user_data["level"] = 0  # Якщо відсутній, встановлюємо початкове значення
+
                 user_data["experience"] += exp
                 while user_data["experience"] >= self.exp_per_level.get(user_data["level"], 100):
                     user_data["level"] += 1
-                    user_data["experience"] -= self.exp_per_level[user_data["level"]]
+                    user_data["experience"] = 0  # Скидаємо exp до 0
                     await self.send_level_up_message(user_id, user_data["level"])
                     await self.check_role_rewards(user_id, user_data["level"])
                 collusers.update_one({"_id": user_id}, {"$set": user_data})
         except Exception as e:
             print(f'Помилка при рівнях: {e}')
             return
+
 
 
 
